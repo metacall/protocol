@@ -4,7 +4,17 @@
 	"description": "Tool for deploying into MetaCall FaaS platform.",
 	"type": "module",
 	"exports": {
-		"./": "./src"
+		"./*": {
+			"types": "./src/*.ts",
+			"import": "./src/*.ts"
+		}
+	},
+	"typesVersions": {
+		"*": {
+			"*": [
+				"src/*.ts"
+			]
+		}
 	},
 	"scripts": {
 		"test": "npm run --silent build && mocha dist/test",
