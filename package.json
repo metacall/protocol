@@ -1,0 +1,92 @@
+{
+	"name": "metacall-protocol",
+	"version": "0.1.0",
+	"description": "Tool for deploying into MetaCall FaaS platform.",
+	"scripts": {
+		"test": "npm run --silent build && mocha dist/test",
+		"unit": "npm run --silent test -- --ignore **/integration**",
+		"prepublishOnly": "npm run --silent build",
+		"build": "npm run --silent lint && tsc",
+		"lint": "eslint . --ignore-pattern dist",
+		"fix": "eslint . --ignore-pattern dist --fix"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/metacall/protocol.git"
+	},
+	"keywords": [
+		"MetaCall",
+		"FaaS",
+		"deploy",
+		"tool"
+	],
+	"author": "Thomas Rory Gummerson <thomas@gummerson.no> (https://trgwii.no/)",
+	"contributors": [
+		"Vicente Eduardo Ferrer Garcia <vic798@gmail.com> (https://metacall.io/)"
+	],
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/metacall/protocol/issues"
+	},
+	"homepage": "https://github.com/metacall/protocol#readme",
+	"prettier": {
+		"tabWidth": 4,
+		"useTabs": true,
+		"singleQuote": true,
+		"trailingComma": "none",
+		"arrowParens": "avoid"
+	},
+	"eslintConfig": {
+		"env": {
+			"es6": true,
+			"node": true
+		},
+		"plugins": [
+			"@typescript-eslint",
+			"eslint-plugin-tsdoc"
+		],
+		"extends": [
+			"eslint:recommended",
+			"prettier",
+			"plugin:@typescript-eslint/eslint-recommended",
+			"plugin:@typescript-eslint/recommended",
+			"plugin:@typescript-eslint/recommended-requiring-type-checking",
+			"prettier/@typescript-eslint",
+			"plugin:prettier/recommended"
+		],
+		"globals": {
+			"Atomics": "readonly",
+			"SharedArrayBuffer": "readonly"
+		},
+		"parser": "@typescript-eslint/parser",
+		"parserOptions": {
+			"ecmaVersion": 2020,
+			"sourceType": "module",
+			"project": "./tsconfig.json"
+		},
+		"rules": {
+			"tsdoc/syntax": "warn"
+		}
+	},
+	"dependencies": {
+		"axios": "^0.21.0",
+		"form-data": "^3.0.0",
+		"ignore-walk": "^3.0.4",
+		"jsonwebtoken": "^8.5.1"
+	},
+	"devDependencies": {
+		"@types/ignore-walk": "^3.0.1",
+		"@types/jsonwebtoken": "^8.5.0",
+		"@types/mocha": "^8.2.2",
+		"@types/node": "^14.14.7",
+		"@typescript-eslint/eslint-plugin": "^4.7.0",
+		"@typescript-eslint/parser": "^4.7.0",
+		"eslint": "^7.13.0",
+		"eslint-config-prettier": "^6.15.0",
+		"eslint-plugin-prettier": "^3.1.4",
+		"eslint-plugin-tsdoc": "^0.2.7",
+		"mocha": "^8.4.0",
+		"prettier": "^2.1.2",
+		"typescript": "^4.3.2"
+	}
+}
