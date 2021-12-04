@@ -2,6 +2,10 @@
 	"name": "metacall-protocol",
 	"version": "0.1.0",
 	"description": "Tool for deploying into MetaCall FaaS platform.",
+	"type": "module",
+	"exports": {
+		"./": "./src"
+	},
 	"scripts": {
 		"test": "npm run --silent build && mocha dist/test",
 		"unit": "npm run --silent test -- --ignore **/integration**",
