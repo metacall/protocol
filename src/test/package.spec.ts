@@ -6,7 +6,7 @@ import {
 	findMetaCallJsons,
 	findRunners,
 	generateJsonsFromFiles
-} from '../lib/package';
+} from '../package';
 
 describe('unit package', function () {
 	const basePath = join(process.cwd(), 'src', 'test', 'resources', 'package');
