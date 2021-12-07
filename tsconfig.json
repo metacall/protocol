@@ -5,7 +5,8 @@
 		"target": "ES2019",
 		"module": "CommonJS",
 		"outDir": "dist",
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"declaration": true
 	},
-	"include": ["types/*.ts", "src/*.ts", "src/**/*.ts"]
+	"include": ["src/*.ts", "src/**/*.ts"]
 }

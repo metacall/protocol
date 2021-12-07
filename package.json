@@ -2,11 +2,23 @@
 	"name": "metacall-protocol",
 	"version": "0.1.0",
 	"description": "Tool for deploying into MetaCall FaaS platform.",
+	"exports": {
+		"./*": "./dist/*.js",
+		"./package.json": "./package.json"
+	},
+	"typesVersions": {
+		"*": {
+			"*": [
+				"dist/*.d.ts"
+			]
+		}
+	},
 	"scripts": {
 		"test": "npm run --silent build && mocha dist/test",
 		"unit": "npm run --silent test -- --ignore **/integration**",
 		"prepublishOnly": "npm run --silent build",
 		"build": "npm run --silent lint && tsc",
+		"postinstall": "npm run build",
 		"lint": "eslint . --ignore-pattern dist",
 		"fix": "eslint . --ignore-pattern dist --fix"
 	},
@@ -17,8 +29,7 @@
 	"keywords": [
 		"MetaCall",
 		"FaaS",
-		"deploy",
-		"tool"
+		"protocol"
 	],
 	"author": "Thomas Rory Gummerson <thomas@gummerson.no> (https://trgwii.no/)",
 	"contributors": [
@@ -87,6 +98,6 @@
 		"eslint-plugin-tsdoc": "^0.2.7",
 		"mocha": "^8.4.0",
 		"prettier": "^2.1.2",
-		"typescript": "^4.3.2"
+		"typescript": "4.3.2"
 	}
 }
