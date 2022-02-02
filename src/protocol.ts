@@ -25,7 +25,6 @@ interface API {
 	refresh(): Promise<string>;
 	validate(): Promise<boolean>;
 	deployEnabled(): Promise<boolean>;
-	deployEnabled(): Promise<boolean>;
 	listSubscriptions(): Promise<SubscriptionMap>;
 	inspect(): Promise<Deployment[]>;
 	upload(
