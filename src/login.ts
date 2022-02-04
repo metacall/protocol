@@ -17,7 +17,7 @@ export default (
 	};
 
 	if (!baseURL.includes('localhost'))
-		request['g-recaptcha-response'] = 'empty';
+		request['g-recaptcha-response'] = 'empty'; //TODO: Review the captcha
 
 	return axios
 		.post<string>(baseURL + '/login', request, {
