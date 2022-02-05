@@ -1,6 +1,6 @@
 {
 	"name": "metacall-protocol",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Tool for deploying into MetaCall FaaS platform.",
 	"exports": {
 		"./*": "./dist/*.js",
@@ -96,7 +96,7 @@
 		"eslint-config-prettier": "^6.15.0",
 		"eslint-plugin-prettier": "^3.1.4",
 		"eslint-plugin-tsdoc": "^0.2.7",
-		"mocha": "^8.4.0",
+		"mocha": "^9.2.0",
 		"prettier": "^2.1.2",
 		"typescript": "4.3.2"
 	}
