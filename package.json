@@ -1,6 +1,6 @@
 {
 	"name": "metacall-protocol",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Tool for deploying into MetaCall FaaS platform.",
 	"exports": {
 		"./*": "./dist/*.js",
@@ -21,7 +21,7 @@
 		"postinstall": "npm run build",
 		"lint": "eslint . --ignore-pattern dist",
 		"fix": "eslint . --ignore-pattern dist --fix",
-		"doc": "node dist/doc.js"
+		"doc": "node dist/doc/index.js"
 	},
 	"repository": {
 		"type": "git",
