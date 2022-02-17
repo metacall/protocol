@@ -5,10 +5,16 @@ const PORT: number = parseInt(process.env.PORT as string, 10) || 5000;
 const app: express.Application = express();
 const swaggerDocument: unknown = YAML.load('./swagger.yaml');
 
+const options = {
+	swaggerOptions: {
+		supportedSubmitMethods: []
+	}
+};
+
 app.use(
 	'/api-docs',
 	swaggerUi.serve,
-	swaggerUi.setup(swaggerDocument as JsonObject)
+	swaggerUi.setup(swaggerDocument as JsonObject, options)
 );
 
 app.listen(PORT, () => {
