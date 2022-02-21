@@ -45,6 +45,13 @@ interface API {
 		suffix: string,
 		version: string
 	): Promise<string>;
+	logs(
+		container: string,
+		type: string,
+		suffix: string,
+		prefix: string,
+		version?: string
+	): Promise<string>;
 }
 
 export default (token: string, baseURL: string): API => {
@@ -161,6 +168,29 @@ export default (token: string, baseURL: string): API => {
 					{
 						prefix,
 						suffix,
+						version
+					},
+					{
+						headers: { Authorization: 'jwt ' + token }
+					}
+				)
+				.then(res => res.data),
+
+		logs: (
+			container: string,
+			type: string,
+			suffix: string,
+			prefix: string,
+			version = 'v1'
+		): Promise<string> =>
+			axios
+				.post<string>(
+					baseURL + '/api/deploy/logs',
+					{
+						container,
+						type,
+						suffix,
+						prefix,
 						version
 					},
 					{
