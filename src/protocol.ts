@@ -17,7 +17,7 @@
 
 import axios from 'axios';
 import FormData from 'form-data';
-import { Deployment, MetaCallJSON } from './deployment';
+import { Deployment, LogType, MetaCallJSON } from './deployment';
 
 type SubscriptionMap = Record<string, number>;
 
@@ -44,6 +44,13 @@ interface API {
 		prefix: string,
 		suffix: string,
 		version: string
+	): Promise<string>;
+	logs(
+		container: string,
+		type: LogType,
+		suffix: string,
+		prefix: string,
+		version?: string
 	): Promise<string>;
 }
 
@@ -161,6 +168,29 @@ export default (token: string, baseURL: string): API => {
 					{
 						prefix,
 						suffix,
+						version
+					},
+					{
+						headers: { Authorization: 'jwt ' + token }
+					}
+				)
+				.then(res => res.data),
+
+		logs: (
+			container: string,
+			type: LogType = LogType.Deploy,
+			suffix: string,
+			prefix: string,
+			version = 'v1'
+		): Promise<string> =>
+			axios
+				.post<string>(
+					baseURL + '/api/deploy/logs',
+					{
+						container,
+						type,
+						suffix,
+						prefix,
 						version
 					},
 					{

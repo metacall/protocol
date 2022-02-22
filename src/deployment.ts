@@ -7,6 +7,11 @@
 
 type DeployStatus = 'create' | 'ready' | 'fail';
 
+export enum LogType {
+	Job = 'job',
+	Deploy = 'deploy'
+}
+
 export type LanguageId =
 	| 'node'
 	| 'ts'
