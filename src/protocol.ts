@@ -20,11 +20,14 @@ import FormData from 'form-data';
 import { Deployment, LogType, MetaCallJSON } from './deployment';
 
 type SubscriptionMap = Record<string, number>;
+
 export type ResourceType = 'Package' | 'Repository';
-export interface addResponse {
+
+export interface AddResponse {
 	id: string;
 }
-export interface branches {
+
+export interface Branches {
 	branches: [string];
 }
 
@@ -44,7 +47,7 @@ interface API {
 		url: string,
 		branch: string,
 		jsons: MetaCallJSON[]
-	): Promise<addResponse>;
+	): Promise<AddResponse>;
 	deploy(
 		name: string,
 		env: string[],
@@ -65,7 +68,7 @@ interface API {
 		prefix: string,
 		version?: string
 	): Promise<string>;
-	branchlist(url: string): Promise<branches>;
+	branchList(url: string): Promise<Branches>;
 }
 
 export default (token: string, baseURL: string): API => {
@@ -150,7 +153,7 @@ export default (token: string, baseURL: string): API => {
 			url: string,
 			branch: string,
 			jsons: MetaCallJSON[] = []
-		): Promise<addResponse> =>
+		): Promise<AddResponse> =>
 			axios
 				.post<string>(
 					baseURL + '/api/repository/add',
@@ -163,8 +166,8 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then((res: AxiosResponse) => res.data as addResponse),
-		branchlist: (url: string): Promise<branches> =>
+				.then((res: AxiosResponse) => res.data as AddResponse),
+		branchList: (url: string): Promise<Branches> =>
 			axios
 				.post<string>(
 					baseURL + '/api/repository/branchlist',
@@ -175,7 +178,7 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then((res: AxiosResponse) => res.data as branches),
+				.then((res: AxiosResponse) => res.data as Branches),
 
 		deploy: (
 			name: string,
