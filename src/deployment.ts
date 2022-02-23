@@ -5,7 +5,7 @@
 
 */
 
-type DeployStatus = 'create' | 'ready' | 'fail';
+export type DeployStatus = 'create' | 'ready' | 'fail';
 
 export enum LogType {
 	Job = 'job',
