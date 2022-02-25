@@ -20,6 +20,7 @@ import FormData from 'form-data';
 import { Deployment, LogType, MetaCallJSON } from './deployment';
 
 type SubscriptionMap = Record<string, number>;
+export type ResourceType = 'Package' | 'Repository';
 
 interface API {
 	refresh(): Promise<string>;
@@ -38,7 +39,7 @@ interface API {
 		name: string,
 		env: string[],
 		plan: string,
-		resourceType: string,
+		resourceType: ResourceType,
 		release?: string,
 		version?: string
 	): Promise<string>;
@@ -159,7 +160,7 @@ export default (token: string, baseURL: string): API => {
 			plan: string,
 			release: string = Date.now().toString(16),
 			version = 'v1',
-			resourceType: 'Package' | 'Repository'
+			resourceType: ResourceType
 		): Promise<string> =>
 			axios
 				.post<string>(
