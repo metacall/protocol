@@ -33,10 +33,12 @@ interface API {
 		jsons: MetaCallJSON[],
 		runners: string[]
 	): Promise<string>;
+	add(url: string, branch: string, jsons: MetaCallJSON[]): Promise<string>;
 	deploy(
 		name: string,
 		env: string[],
 		plan: string,
+		resourceType: string,
 		release?: string,
 		version?: string
 	): Promise<string>;
@@ -132,19 +134,38 @@ export default (token: string, baseURL: string): API => {
 			);
 			return res.data;
 		},
+		add: (
+			url: string,
+			branch: string,
+			jsons: MetaCallJSON[] = []
+		): Promise<string> =>
+			axios
+				.post<string>(
+					baseURL + '/api/repository/add',
+					{
+						url,
+						branch,
+						jsons
+					},
+					{
+						headers: { Authorization: 'jwt ' + token }
+					}
+				)
+				.then(res => res.data),
 
 		deploy: (
 			name: string,
 			env: string[],
 			plan: string,
 			release: string = Date.now().toString(16),
-			version = 'v1'
+			version = 'v1',
+			resourceType: 'Package' | 'Repository'
 		): Promise<string> =>
 			axios
 				.post<string>(
 					baseURL + '/api/deploy/create',
 					{
-						resourceType: 'Package',
+						resourceType,
 						suffix: name,
 						release,
 						env,
