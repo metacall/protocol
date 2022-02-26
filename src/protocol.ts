@@ -15,12 +15,15 @@
 
 */
 
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import { Deployment, LogType, MetaCallJSON } from './deployment';
 
 type SubscriptionMap = Record<string, number>;
 export type ResourceType = 'Package' | 'Repository';
+export interface addResponse {
+	id: string;
+}
 
 interface API {
 	refresh(): Promise<string>;
@@ -34,7 +37,11 @@ interface API {
 		jsons: MetaCallJSON[],
 		runners: string[]
 	): Promise<string>;
-	add(url: string, branch: string, jsons: MetaCallJSON[]): Promise<string>;
+	add(
+		url: string,
+		branch: string,
+		jsons: MetaCallJSON[]
+	): Promise<addResponse>;
 	deploy(
 		name: string,
 		env: string[],
@@ -139,7 +146,7 @@ export default (token: string, baseURL: string): API => {
 			url: string,
 			branch: string,
 			jsons: MetaCallJSON[] = []
-		): Promise<string> =>
+		): Promise<addResponse> =>
 			axios
 				.post<string>(
 					baseURL + '/api/repository/add',
@@ -152,7 +159,7 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data),
+				.then((res: AxiosResponse) => res.data as addResponse),
 
 		deploy: (
 			name: string,

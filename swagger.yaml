@@ -111,6 +111,25 @@ paths:
       tags:
         - Packages
         
+  /api/deploy/add:
+    post:
+      summary: Retrieve information about this service
+      description: >-
+        deploys the previously uploaded zip into the faas
+      operationId: AddRepo
+      requestBody:
+        $ref: '#/components/requestBodies/AddRepo'
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/200ServiceInfo'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Deployments
+        
+
   /api/deploy/create:
     post:
       summary: Retrieve information about this service
@@ -686,6 +705,27 @@ components:
                 type: string
                 description: 'Version'
                 default: 'v1'
+                
+    AddRepo:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                description: 'Url of Repository'
+              branch:
+                type: string
+                description: 'Name of the branch'
+              jsons:
+                type: array
+                items:
+                  $ref: '#/definitions/MetaCallJSON' 
+            required:
+            - url
+            - branch
+
     CreateDeployment:
       required: true
       content:
@@ -761,3 +801,18 @@ components:
                   the encoded JWT GA4GH Passport that contains embedded Visas. 
                   The overall JWT is signed as are the individual Passport
                   Visas.
+
+definitions:
+  MetaCallJSON:
+    properties:
+      language_id:
+        type: string
+        enum: ['node','ts','rb','py','cs','cob''file','rpc']
+        description: "Language id"
+      path:
+        type: string
+      script:
+        schema:
+            type: array
+            items:
+              type: string
