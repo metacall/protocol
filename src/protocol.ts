@@ -184,9 +184,9 @@ export default (token: string, baseURL: string): API => {
 			name: string,
 			env: string[],
 			plan: string,
+			resourceType: ResourceType,
 			release: string = Date.now().toString(16),
-			version = 'v1',
-			resourceType: ResourceType
+			version = 'v1'
 		): Promise<string> =>
 			axios
 				.post<string>(
