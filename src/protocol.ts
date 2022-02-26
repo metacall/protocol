@@ -24,6 +24,9 @@ export type ResourceType = 'Package' | 'Repository';
 export interface addResponse {
 	id: string;
 }
+export interface branches {
+	branches: [string];
+}
 
 interface API {
 	refresh(): Promise<string>;
@@ -62,6 +65,7 @@ interface API {
 		prefix: string,
 		version?: string
 	): Promise<string>;
+	branchlist(url: string): Promise<branches>;
 }
 
 export default (token: string, baseURL: string): API => {
@@ -160,6 +164,18 @@ export default (token: string, baseURL: string): API => {
 					}
 				)
 				.then((res: AxiosResponse) => res.data as addResponse),
+		branchlist: (url: string): Promise<branches> =>
+			axios
+				.post<string>(
+					baseURL + '/api/repository/branchlist',
+					{
+						url
+					},
+					{
+						headers: { Authorization: 'jwt ' + token }
+					}
+				)
+				.then((res: AxiosResponse) => res.data as branches),
 
 		deploy: (
 			name: string,
