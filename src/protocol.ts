@@ -69,6 +69,7 @@ interface API {
 		version?: string
 	): Promise<string>;
 	branchList(url: string): Promise<Branches>;
+	fileList(url: string, branch: string): Promise<string[]>;
 }
 
 export default (token: string, baseURL: string): API => {
@@ -245,7 +246,21 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data)
+				.then(res => res.data),
+
+		fileList: (url: string, branch: string): Promise<string[]> =>
+			axios
+				.post<{ [k: string]: string[] }>(
+					baseURL + '/api/repository/filelist',
+					{
+						url,
+						branch
+					},
+					{
+						headers: { Authorization: 'jwt ' + token }
+					}
+				)
+				.then(res => res.data['files'])
 	};
 
 	return api;
