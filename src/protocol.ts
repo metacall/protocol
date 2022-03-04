@@ -17,7 +17,7 @@
 
 import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
-import { Deployment, LogType, MetaCallJSON } from './deployment';
+import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 
 type SubscriptionMap = Record<string, number>;
 
@@ -55,7 +55,7 @@ interface API {
 		resourceType: ResourceType,
 		release?: string,
 		version?: string
-	): Promise<string>;
+	): Promise<Create>;
 	deployDelete(
 		prefix: string,
 		suffix: string,
@@ -188,9 +188,9 @@ export default (token: string, baseURL: string): API => {
 			resourceType: ResourceType,
 			release: string = Date.now().toString(16),
 			version = 'v1'
-		): Promise<string> =>
+		): Promise<Create> =>
 			axios
-				.post<string>(
+				.post<Create>(
 					baseURL + '/api/deploy/create',
 					{
 						resourceType,

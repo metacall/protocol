@@ -105,6 +105,12 @@ export interface Deployment {
 	ports: number[];
 }
 
+export interface Create {
+	suffix: string;
+	prefix: string;
+	version: string;
+}
+
 export type MetaCallJSON = {
 	language_id: LanguageId;
 	path: string;
