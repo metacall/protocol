@@ -15,12 +15,13 @@
 
 */
 
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 
 type SubscriptionMap = Record<string, number>;
 
+export type APIError = AxiosError;
 export type ResourceType = 'Package' | 'Repository';
 
 export interface AddResponse {
