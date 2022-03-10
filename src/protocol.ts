@@ -15,9 +15,14 @@
 
 */
 
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
+
+export const isProtocolError = (err: AxiosError): boolean =>
+	axios.isAxiosError(err);
+
+export { AxiosError as ProtocolError };
 
 type SubscriptionMap = Record<string, number>;
 
