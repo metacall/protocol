@@ -19,7 +19,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 
-export const isProtocolError = (err: AxiosError): boolean =>
+export const isProtocolError = (err: unknown): boolean =>
 	axios.isAxiosError(err);
 
 export { AxiosError as ProtocolError };
