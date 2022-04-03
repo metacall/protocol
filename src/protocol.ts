@@ -190,7 +190,7 @@ export default (token: string, baseURL: string): API => {
 		deploy: (
 			name: string,
 			env: string[],
-			plan: string,
+			plan: Plans,
 			resourceType: ResourceType,
 			release: string = Date.now().toString(16),
 			version = 'v1'
