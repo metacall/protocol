@@ -18,6 +18,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
+import { Plans } from './plan';
 
 export const isProtocolError = (err: unknown): boolean =>
 	axios.isAxiosError(err);
@@ -56,7 +57,7 @@ interface API {
 	deploy(
 		name: string,
 		env: string[],
-		plan: string,
+		plan: Plans,
 		resourceType: ResourceType,
 		release?: string,
 		version?: string
@@ -189,7 +190,7 @@ export default (token: string, baseURL: string): API => {
 		deploy: (
 			name: string,
 			env: string[],
-			plan: string,
+			plan: Plans,
 			resourceType: ResourceType,
 			release: string = Date.now().toString(16),
 			version = 'v1'
