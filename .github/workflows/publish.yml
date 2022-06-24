@@ -16,6 +16,15 @@ jobs:
                   registry-url: https://registry.npmjs.org
             - run: |
                   npm i
+            - name: Lint
+              run: |
+                  npm run lint
+            - name: Build
+              run: |
+                  npm run build
+            - name: Run Tests
+              run: |
+                  npm run test
             - name: Publish
               uses: JS-DevTools/npm-publish@v1
               with:
