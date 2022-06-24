@@ -1,22 +1,21 @@
 name: Publish
-
 on:
     push:
         branches: [master]
 
 jobs:
-    publish:
+    build:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
             - name: checkout
-            - uses: actions/setup-node@v2
-            - name: Installing dependencies 
+            - name: Installing dependencies
+              uses: actions/setup-node@v2
               with:
                   node-version: '14'
                   registry-url: https://registry.npmjs.org
-              - run: |
-                  npm install
+            - run: |
+                  npm i
             - uses: JS-DevTools/npm-publish@v1
             - name: publish
               with:
