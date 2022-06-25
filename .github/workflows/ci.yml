@@ -1,31 +1,43 @@
-name: Publish
+name: CI
 on:
+    pull_request:
     push:
-        branches: [master]
+        branches:
+            - master
+        tags:
+            - 'v*.*.*'
 
 jobs:
-    publish:
+    ci:
         runs-on: ubuntu-latest
         steps:
-            - name: checkout
+            - name: Checkout
               uses: actions/checkout@v3
-            - name: Installing Dependencies
+
+            - name: Setup NodeJS
               uses: actions/setup-node@v2
               with:
                   node-version: '14'
                   registry-url: https://registry.npmjs.org
-            - run: |
+
+            - name: Installing Dependencies
+              run: |
                   npm i
+
             - name: Lint
               run: |
                   npm run lint
+
             - name: Build
               run: |
                   npm run build
+
             - name: Run Tests
               run: |
                   npm run test
+
             - name: Publish
+              if: startsWith(github.ref, 'refs/tags/')
               uses: JS-DevTools/npm-publish@v1
               with:
-                token: ${{secrets.NPM_AUTH_TOKEN}}
+                  token: ${{ secrets.NPM_AUTH_TOKEN }}
