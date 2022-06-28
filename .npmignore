@@ -4,4 +4,6 @@ package-lock.json
 src/test
 src/doc
 dist/test
+dist/doc
 .eslintignore
+swagger.yaml
