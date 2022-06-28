@@ -18,7 +18,6 @@
 		"unit": "npm run --silent test -- --ignore **/integration**",
 		"prepublishOnly": "npm run --silent build",
 		"build": "npm run --silent lint && tsc",
-		"postinstall": "npm run build",
 		"lint": "eslint . --ignore-pattern dist",
 		"fix": "eslint . --ignore-pattern dist --fix",
 		"doc": "node dist/doc/index.js"
