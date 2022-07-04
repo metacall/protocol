@@ -8,11 +8,14 @@
 	validate: validates the auth token
 	deployEnabled: checks if you're able to deploy
 	listSubscriptions: gives you a list of the subscription available
+	listSubscriptionsDeploys: gives you a list of the subscription being used in deploys
 	inspect: gives you are deploys with it's endpoints
 	upload: uploads a zip (package) into the faas
 	deploy: deploys the previously uploaded zip into the faas
 	deployDelete: deletes the deploy and the zip
-
+	logs: retrieve the logs of a deploy by runner or deployment
+	branchList: get the branches of a repository
+	fileList: get files of a repository by branch
 */
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
@@ -26,6 +29,13 @@ export const isProtocolError = (err: unknown): boolean =>
 export { AxiosError as ProtocolError };
 
 type SubscriptionMap = Record<string, number>;
+
+export interface SubscriptionDeploy {
+	id: string;
+	plan: Plans;
+	date: number;
+	deploy: string;
+}
 
 export type ResourceType = 'Package' | 'Repository';
 
@@ -42,6 +52,7 @@ interface API {
 	validate(): Promise<boolean>;
 	deployEnabled(): Promise<boolean>;
 	listSubscriptions(): Promise<SubscriptionMap>;
+	listSubscriptionsDeploys(): Promise<SubscriptionDeploy[]>;
 	inspect(): Promise<Deployment[]>;
 	upload(
 		name: string,
@@ -121,6 +132,16 @@ export default (token: string, baseURL: string): API => {
 
 			return subscriptions;
 		},
+
+		listSubscriptionsDeploys: async (): Promise<SubscriptionDeploy[]> =>
+			axios
+				.get<SubscriptionDeploy[]>(
+					baseURL + '/api/billing/list-subscriptions-deploys',
+					{
+						headers: { Authorization: 'jwt ' + token }
+					}
+				)
+				.then(res => res.data),
 
 		inspect: async (): Promise<Deployment[]> =>
 			axios
