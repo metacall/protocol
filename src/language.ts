@@ -16,13 +16,6 @@ interface Language {
 	runnerFilesRegexes: RegExp[]; // Regex for generating the runners list
 }
 
-const displayNameMap: Record<string, string> = {
-	nodejs: 'NPM',
-	python: 'PIP',
-	ruby: 'GEM',
-	csharp: 'NuGet'
-};
-
 export const Languages: Record<LanguageId, Language> = {
 	cs: {
 		tag: 'cs',
@@ -100,5 +93,13 @@ export const DisplayNameToLanguageId: Record<string, LanguageId> = Object.keys(
 	{}
 );
 
-export const runnerDisplayName = (runner: string): string =>
-	displayNameMap[runner] || 'Deploy';
+export const RunnerToDisplayName = (runner: string): string => {
+	const displayNameMap: Record<string, string> = {
+		nodejs: 'NPM',
+		python: 'Pip',
+		ruby: 'Gem',
+		csharp: 'NuGet'
+	};
+
+	return displayNameMap[runner] || 'Build';
+};
