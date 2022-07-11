@@ -17,6 +17,7 @@
 		"test": "npm run --silent build && mocha dist/test",
 		"unit": "npm run --silent test -- --ignore **/integration**",
 		"prepublishOnly": "npm run --silent build",
+		"postinstall": "git config --local core.hooksPath githooks",
 		"build": "npm run --silent lint && tsc",
 		"lint": "eslint . --ignore-pattern dist",
 		"fix": "eslint . --ignore-pattern dist --fix",
