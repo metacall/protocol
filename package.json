@@ -78,7 +78,10 @@
 		},
 		"rules": {
 			"tsdoc/syntax": "warn"
-		}
+		},
+		"ignorePatterns": [
+			"githooks/common.js"
+		]
 	},
 	"dependencies": {
 		"@types/ignore-walk": "^4.0.0",
