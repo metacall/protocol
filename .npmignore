@@ -7,3 +7,4 @@ dist/test
 dist/doc
 .eslintignore
 swagger.yaml
+githooks

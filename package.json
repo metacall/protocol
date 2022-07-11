@@ -1,6 +1,6 @@
 {
 	"name": "@metacall/protocol",
-	"version": "0.1.15",
+	"version": "0.1.17",
 	"description": "Tool for deploying into MetaCall FaaS platform.",
 	"exports": {
 		"./*": "./dist/*.js",
@@ -17,7 +17,7 @@
 		"test": "npm run --silent build && mocha dist/test",
 		"unit": "npm run --silent test -- --ignore **/integration**",
 		"prepublishOnly": "npm run --silent build",
-		"postinstall": "git config --local core.hooksPath githooks",
+		"postinstall": "node -e \"require('fs').existsSync('githooks') && require('./githooks/configure.js').configure()\"",
 		"build": "npm run --silent lint && tsc",
 		"lint": "eslint . --ignore-pattern dist",
 		"fix": "eslint . --ignore-pattern dist --fix",
@@ -78,10 +78,7 @@
 		},
 		"rules": {
 			"tsdoc/syntax": "warn"
-		},
-		"ignorePatterns": [
-			"githooks/common.js"
-		]
+		}
 	},
 	"dependencies": {
 		"@types/ignore-walk": "^4.0.0",
