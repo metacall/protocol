@@ -1,6 +1,6 @@
 {
 	"name": "@metacall/protocol",
-	"version": "0.1.17",
+	"version": "0.1.18",
 	"description": "Tool for deploying into MetaCall FaaS platform.",
 	"exports": {
 		"./*": "./dist/*.js",
