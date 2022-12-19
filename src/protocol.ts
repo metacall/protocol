@@ -67,7 +67,7 @@ interface API {
 	): Promise<AddResponse>;
 	deploy(
 		name: string,
-		env: string[],
+		env: { name: string; value: string }[],
 		plan: Plans,
 		resourceType: ResourceType,
 		release?: string,
@@ -210,7 +210,7 @@ export default (token: string, baseURL: string): API => {
 
 		deploy: (
 			name: string,
-			env: string[],
+			env: { name: string; value: string }[],
 			plan: Plans,
 			resourceType: ResourceType,
 			release: string = Date.now().toString(16),
