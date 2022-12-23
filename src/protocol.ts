@@ -47,7 +47,7 @@ export interface Branches {
 	branches: [string];
 }
 
-interface API {
+export interface API {
 	refresh(): Promise<string>;
 	validate(): Promise<boolean>;
 	deployEnabled(): Promise<boolean>;
