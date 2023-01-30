@@ -25,7 +25,7 @@ export type LanguageId =
 	| 'file'
 	| 'rpc';
 
-enum ValueId {
+export enum ValueId {
 	METACALL_BOOL = 0,
 	METACALL_CHAR = 1,
 	METACALL_SHORT = 2,
