@@ -9,7 +9,7 @@ import {
 	PackageError
 } from '../package';
 
-describe('integration package', function () {
+describe('Integration Package', function () {
 	const basePath = join(
 		process.cwd(),
 		'src',

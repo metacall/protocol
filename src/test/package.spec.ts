@@ -8,7 +8,7 @@ import {
 	generateJsonsFromFiles
 } from '../package';
 
-describe('unit package', function () {
+describe('Unit Package', function () {
 	const basePath = join(process.cwd(), 'src', 'test', 'resources', 'package');
 
 	it('findFilesPath all', async () => {
