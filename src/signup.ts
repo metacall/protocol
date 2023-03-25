@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { URL } from 'url';
 interface Request {
 	email: string;
 	password: string;
@@ -23,7 +24,7 @@ export default (
 		.post<string>(baseURL + '/signup', request, {
 			headers: {
 				Accept: 'application/json, text/plain, */*',
-				Host: baseURL.split('//')[1],
+				Host: new URL(baseURL).host,
 				Origin: baseURL
 			}
 		})
