@@ -37,7 +37,10 @@ export interface SubscriptionDeploy {
 	deploy: string;
 }
 
-export type ResourceType = 'Package' | 'Repository';
+export enum ResourceType {
+	Package = 'Package',
+	Repository = 'Repository'
+};
 
 export interface AddResponse {
 	id: string;
@@ -57,8 +60,8 @@ export interface API {
 	upload(
 		name: string,
 		blob: unknown,
-		jsons: MetaCallJSON[],
-		runners: string[]
+		jsons?: MetaCallJSON[],
+		runners?: string[]
 	): Promise<string>;
 	add(
 		url: string,
@@ -171,7 +174,7 @@ export default (token: string, baseURL: string): API => {
 				{
 					headers: {
 						Authorization: 'jwt ' + token,
-						...fd.getHeaders()
+						...(fd.getHeaders?.() ?? {}) // operator chaining to make it compatible with frontend
 					}
 				}
 			);
