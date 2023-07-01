@@ -4,12 +4,16 @@
 	"description": "Tool for deploying into MetaCall FaaS platform.",
 	"exports": {
 		"./*": "./dist/*.js",
+		".": "./dist/index.js",
 		"./package.json": "./package.json"
 	},
 	"typesVersions": {
 		"*": {
 			"*": [
 				"dist/*.d.ts"
+			],
+			".": [
+				"dist/index.d.ts"
 			]
 		}
 	},
