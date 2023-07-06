@@ -37,7 +37,10 @@ export interface SubscriptionDeploy {
 	deploy: string;
 }
 
-export type ResourceType = 'Package' | 'Repository';
+export enum ResourceType {
+	Package = 'Package',
+	Repository = 'Repository'
+};
 
 export interface AddResponse {
 	id: string;
