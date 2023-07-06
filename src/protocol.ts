@@ -40,7 +40,7 @@ export interface SubscriptionDeploy {
 export enum ResourceType {
 	Package = 'Package',
 	Repository = 'Repository'
-};
+}
 
 export interface AddResponse {
 	id: string;
