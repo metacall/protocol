@@ -174,7 +174,7 @@ export default (token: string, baseURL: string): API => {
 				{
 					headers: {
 						Authorization: 'jwt ' + token,
-						...fd.getHeaders()
+						...(fd.getHeaders?.() ?? {}) // operator chaining to make it compatible with frontend
 					}
 				}
 			);
