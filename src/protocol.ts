@@ -60,8 +60,8 @@ export interface API {
 	upload(
 		name: string,
 		blob: unknown,
-		jsons: MetaCallJSON[],
-		runners: string[]
+		jsons?: MetaCallJSON[],
+		runners?: string[]
 	): Promise<string>;
 	add(
 		url: string,
