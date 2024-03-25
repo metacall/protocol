@@ -30,7 +30,7 @@ export const findFilesPath = async (
 		})
 	).filter(x => !x.startsWith('.git'));
 
-const pathIsMetaCallJson = (path: string): boolean =>
+export const pathIsMetaCallJson = (path: string): boolean =>
 	!!/^metacall(-.+)?\.json$/.exec(basename(path));
 
 export const findMetaCallJsons = (files: string[]): string[] =>
