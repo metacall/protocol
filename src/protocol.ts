@@ -50,6 +50,21 @@ export interface Branches {
 	branches: [string];
 }
 
+export interface DeployOptions {
+	name: string;
+	env: { name: string; value: string }[];
+	plan: Plans;
+	resourceType: ResourceType;
+	release?: string;
+	version?: string;
+}
+
+export interface deleteOptions {
+	prefix: string;
+	suffix: string;
+	version: string;
+}
+
 export interface API {
 	refresh(): Promise<string>;
 	validate(): Promise<boolean>;
@@ -68,19 +83,8 @@ export interface API {
 		branch: string,
 		jsons: MetaCallJSON[]
 	): Promise<AddResponse>;
-	deploy(
-		name: string,
-		env: { name: string; value: string }[],
-		plan: Plans,
-		resourceType: ResourceType,
-		release?: string,
-		version?: string
-	): Promise<Create>;
-	deployDelete(
-		prefix: string,
-		suffix: string,
-		version: string
-	): Promise<string>;
+	deploy(options: DeployOptions): Promise<Create>;
+	deployDelete(options: deleteOptions): Promise<string>;
 	logs(
 		container: string,
 		type: LogType,
@@ -211,15 +215,16 @@ export default (token: string, baseURL: string): API => {
 				)
 				.then((res: AxiosResponse) => res.data as Branches),
 
-		deploy: (
-			name: string,
-			env: { name: string; value: string }[],
-			plan: Plans,
-			resourceType: ResourceType,
-			release: string = Date.now().toString(16),
-			version = 'v1'
-		): Promise<Create> =>
-			axios
+		deploy: (options: DeployOptions): Promise<Create> => {
+			const {
+				name,
+				env,
+				plan,
+				resourceType,
+				release = Date.now().toString(16),
+				version = 'v1'
+			} = options;
+			return axios
 				.post<Create>(
 					baseURL + '/api/deploy/create',
 					{
@@ -234,14 +239,12 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data),
+				.then(res => res.data);
+		},
 
-		deployDelete: (
-			prefix: string,
-			suffix: string,
-			version = 'v1'
-		): Promise<string> =>
-			axios
+		deployDelete: (options: deleteOptions): Promise<string> => {
+			const { prefix, suffix, version = 'v1' } = options;
+			return axios
 				.post<string>(
 					baseURL + '/api/deploy/delete',
 					{
@@ -253,8 +256,8 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data),
-
+				.then(res => res.data);
+		},
 		logs: (
 			container: string,
 			type: LogType = LogType.Deploy,
