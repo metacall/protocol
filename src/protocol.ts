@@ -50,7 +50,7 @@ export interface Branches {
 	branches: [string];
 }
 
-export interface DeployOptions {
+export interface DeployBody {
 	name: string;
 	env: { name: string; value: string }[];
 	plan: Plans;
@@ -59,10 +59,19 @@ export interface DeployOptions {
 	version?: string;
 }
 
-export interface deleteOptions {
+export interface DeleteBody {
 	prefix: string;
 	suffix: string;
 	version: string;
+}
+
+export interface FetchFilesFromRepoBody {
+	branch: string;
+	url: string;
+}
+
+export interface FetchBranchListBody {
+	url: string;
 }
 
 export interface API {
@@ -83,8 +92,8 @@ export interface API {
 		branch: string,
 		jsons: MetaCallJSON[]
 	): Promise<AddResponse>;
-	deploy(options: DeployOptions): Promise<Create>;
-	deployDelete(options: deleteOptions): Promise<string>;
+	deploy(options: DeployBody): Promise<Create>;
+	deployDelete(options: DeleteBody): Promise<string>;
 	logs(
 		container: string,
 		type: LogType,
@@ -92,8 +101,8 @@ export interface API {
 		prefix: string,
 		version?: string
 	): Promise<string>;
-	branchList(url: string): Promise<Branches>;
-	fileList(url: string, branch: string): Promise<string[]>;
+	branchList(options: FetchBranchListBody): Promise<Branches>;
+	fileList(options: FetchFilesFromRepoBody): Promise<string[]>;
 }
 
 export default (token: string, baseURL: string): API => {
@@ -202,8 +211,9 @@ export default (token: string, baseURL: string): API => {
 					}
 				)
 				.then((res: AxiosResponse) => res.data as AddResponse),
-		branchList: (url: string): Promise<Branches> =>
-			axios
+		branchList: async (options: FetchBranchListBody): Promise<Branches> => {
+			const { url } = options;
+			return await axios
 				.post<string>(
 					baseURL + '/api/repository/branchlist',
 					{
@@ -213,9 +223,10 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then((res: AxiosResponse) => res.data as Branches),
+				.then((res: AxiosResponse) => res.data as Branches);
+		},
 
-		deploy: (options: DeployOptions): Promise<Create> => {
+		deploy: async (options: DeployBody): Promise<Create> => {
 			const {
 				name,
 				env,
@@ -224,7 +235,7 @@ export default (token: string, baseURL: string): API => {
 				release = Date.now().toString(16),
 				version = 'v1'
 			} = options;
-			return axios
+			return await axios
 				.post<Create>(
 					baseURL + '/api/deploy/create',
 					{
@@ -242,9 +253,9 @@ export default (token: string, baseURL: string): API => {
 				.then(res => res.data);
 		},
 
-		deployDelete: (options: deleteOptions): Promise<string> => {
+		deployDelete: async (options: DeleteBody): Promise<string> => {
 			const { prefix, suffix, version = 'v1' } = options;
-			return axios
+			return await axios
 				.post<string>(
 					baseURL + '/api/deploy/delete',
 					{
@@ -281,8 +292,11 @@ export default (token: string, baseURL: string): API => {
 				)
 				.then(res => res.data),
 
-		fileList: (url: string, branch: string): Promise<string[]> =>
-			axios
+		fileList: async (
+			options: FetchFilesFromRepoBody
+		): Promise<string[]> => {
+			const { url, branch } = options;
+			return await axios
 				.post<{ [k: string]: string[] }>(
 					baseURL + '/api/repository/filelist',
 					{
@@ -293,7 +307,8 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data['files'])
+				.then(res => res.data['files']);
+		}
 	};
 
 	return api;
