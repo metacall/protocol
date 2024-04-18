@@ -50,6 +50,30 @@ export interface Branches {
 	branches: [string];
 }
 
+export interface DeployBody {
+	name: string;
+	env: { name: string; value: string }[];
+	plan: Plans;
+	resourceType: ResourceType;
+	release?: string;
+	version?: string;
+}
+
+export interface DeleteBody {
+	prefix: string;
+	suffix: string;
+	version: string;
+}
+
+export interface FetchFilesFromRepoBody {
+	branch: string;
+	url: string;
+}
+
+export interface FetchBranchListBody {
+	url: string;
+}
+
 export interface API {
 	refresh(): Promise<string>;
 	validate(): Promise<boolean>;
@@ -68,19 +92,8 @@ export interface API {
 		branch: string,
 		jsons: MetaCallJSON[]
 	): Promise<AddResponse>;
-	deploy(
-		name: string,
-		env: { name: string; value: string }[],
-		plan: Plans,
-		resourceType: ResourceType,
-		release?: string,
-		version?: string
-	): Promise<Create>;
-	deployDelete(
-		prefix: string,
-		suffix: string,
-		version: string
-	): Promise<string>;
+	deploy(options: DeployBody): Promise<Create>;
+	deployDelete(options: DeleteBody): Promise<string>;
 	logs(
 		container: string,
 		type: LogType,
@@ -88,8 +101,8 @@ export interface API {
 		prefix: string,
 		version?: string
 	): Promise<string>;
-	branchList(url: string): Promise<Branches>;
-	fileList(url: string, branch: string): Promise<string[]>;
+	branchList(options: FetchBranchListBody): Promise<Branches>;
+	fileList(options: FetchFilesFromRepoBody): Promise<string[]>;
 }
 
 export default (token: string, baseURL: string): API => {
@@ -198,8 +211,9 @@ export default (token: string, baseURL: string): API => {
 					}
 				)
 				.then((res: AxiosResponse) => res.data as AddResponse),
-		branchList: (url: string): Promise<Branches> =>
-			axios
+		branchList: async (options: FetchBranchListBody): Promise<Branches> => {
+			const { url } = options;
+			return await axios
 				.post<string>(
 					baseURL + '/api/repository/branchlist',
 					{
@@ -209,17 +223,19 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then((res: AxiosResponse) => res.data as Branches),
+				.then((res: AxiosResponse) => res.data as Branches);
+		},
 
-		deploy: (
-			name: string,
-			env: { name: string; value: string }[],
-			plan: Plans,
-			resourceType: ResourceType,
-			release: string = Date.now().toString(16),
-			version = 'v1'
-		): Promise<Create> =>
-			axios
+		deploy: async (options: DeployBody): Promise<Create> => {
+			const {
+				name,
+				env,
+				plan,
+				resourceType,
+				release = Date.now().toString(16),
+				version = 'v1'
+			} = options;
+			return await axios
 				.post<Create>(
 					baseURL + '/api/deploy/create',
 					{
@@ -234,14 +250,12 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data),
+				.then(res => res.data);
+		},
 
-		deployDelete: (
-			prefix: string,
-			suffix: string,
-			version = 'v1'
-		): Promise<string> =>
-			axios
+		deployDelete: async (options: DeleteBody): Promise<string> => {
+			const { prefix, suffix, version = 'v1' } = options;
+			return await axios
 				.post<string>(
 					baseURL + '/api/deploy/delete',
 					{
@@ -253,8 +267,8 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data),
-
+				.then(res => res.data);
+		},
 		logs: (
 			container: string,
 			type: LogType = LogType.Deploy,
@@ -278,8 +292,11 @@ export default (token: string, baseURL: string): API => {
 				)
 				.then(res => res.data),
 
-		fileList: (url: string, branch: string): Promise<string[]> =>
-			axios
+		fileList: async (
+			options: FetchFilesFromRepoBody
+		): Promise<string[]> => {
+			const { url, branch } = options;
+			return await axios
 				.post<{ [k: string]: string[] }>(
 					baseURL + '/api/repository/filelist',
 					{
@@ -290,7 +307,8 @@ export default (token: string, baseURL: string): API => {
 						headers: { Authorization: 'jwt ' + token }
 					}
 				)
-				.then(res => res.data['files'])
+				.then(res => res.data['files']);
+		}
 	};
 
 	return api;

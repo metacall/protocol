@@ -104,6 +104,30 @@ export interface Deployment {
 	packages: Record<LanguageId, Handle[]>;
 	ports: number[];
 }
+export class IDeployment implements Deployment {
+	public status: DeployStatus;
+	public prefix: string;
+	public suffix: string;
+	public version: string;
+	public packages: Record<LanguageId, Handle[]>;
+	public ports: number[];
+
+	constructor(
+		status: DeployStatus,
+		prefix: string,
+		suffix: string,
+		version: string,
+		packages: Record<LanguageId, Handle[]>,
+		ports: number[]
+	) {
+		this.status = status;
+		this.prefix = prefix;
+		this.suffix = suffix;
+		this.version = version;
+		this.packages = packages;
+		this.ports = ports;
+	}
+}
 
 export interface Create {
 	suffix: string;
