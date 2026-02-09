@@ -1,4 +1,5 @@
 export * from './deployment';
+export * from './faasTestHelpers';
 export * from './language';
 export * from './login';
 export * from './package';
