@@ -18,8 +18,9 @@
 	fileList: get files of a repository by branch
 */
 
-import axios, { AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import FormData from 'form-data';
+import { URL } from 'url';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 import { Plans } from './plan';
 
@@ -50,13 +51,23 @@ export interface Branches {
 	branches: [string];
 }
 
+export const MaxRetries = 30;
+export const MaxRetryInterval = 2000;
+
+export enum InvokeType {
+	Call = 'call',
+	Await = 'await'
+}
+
 export interface API {
 	refresh(): Promise<string>;
+	ready(): Promise<boolean>;
 	validate(): Promise<boolean>;
 	deployEnabled(): Promise<boolean>;
 	listSubscriptions(): Promise<SubscriptionMap>;
 	listSubscriptionsDeploys(): Promise<SubscriptionDeploy[]>;
 	inspect(): Promise<Deployment[]>;
+	inspectByName(suffix: string): Promise<Deployment>;
 	upload(
 		name: string,
 		blob: unknown,
@@ -90,37 +101,69 @@ export interface API {
 	): Promise<string>;
 	branchList(url: string): Promise<Branches>;
 	fileList(url: string, branch: string): Promise<string[]>;
+	invoke<Result, Args = unknown>(
+		type: InvokeType,
+		prefix: string,
+		suffix: string,
+		version: string,
+		name: string,
+		args?: Args
+	): Promise<Result>;
+	call<Result, Args = unknown>(
+		prefix: string,
+		suffix: string,
+		version: string,
+		name: string,
+		args?: Args
+	): Promise<Result>;
+	await<Result, Args = unknown>(
+		prefix: string,
+		suffix: string,
+		version: string,
+		name: string,
+		args?: Args
+	): Promise<Result>;
 }
 
 export default (token: string, baseURL: string): API => {
+	const getURL = (path: string): string => new URL(path, baseURL).toString();
+	const getConfig = (headers = {}): AxiosRequestConfig => {
+		return {
+			headers: {
+				Authorization: 'jwt ' + token,
+				...headers
+			}
+		};
+	};
+
 	const api: API = {
 		refresh: (): Promise<string> =>
 			axios
-				.get<string>(baseURL + '/api/account/refresh-token', {
-					headers: { Authorization: 'jwt ' + token }
-				})
+				.get<string>(getURL('/api/account/refresh-token'), getConfig())
 				.then(res => res.data),
+
+		ready: (): Promise<boolean> =>
+			axios
+				.get<boolean>(getURL('/api/readiness'), getConfig())
+				.then(res => res.status == 200),
 
 		validate: (): Promise<boolean> =>
 			axios
-				.get<boolean>(baseURL + '/validate', {
-					headers: { Authorization: 'jwt ' + token }
-				})
+				.get<boolean>(getURL('/validate'), getConfig())
 				.then(res => res.data),
 
 		deployEnabled: (): Promise<boolean> =>
 			axios
-				.get<boolean>(baseURL + '/api/account/deploy-enabled', {
-					headers: { Authorization: 'jwt ' + token }
-				})
+				.get<boolean>(
+					getURL('/api/account/deploy-enabled'),
+					getConfig()
+				)
 				.then(res => res.data),
 
 		listSubscriptions: async (): Promise<SubscriptionMap> => {
 			const res = await axios.get<string[]>(
-				baseURL + '/api/billing/list-subscriptions',
-				{
-					headers: { Authorization: 'jwt ' + token }
-				}
+				getURL('/api/billing/list-subscriptions'),
+				getConfig()
 			);
 
 			const subscriptions: SubscriptionMap = {};
@@ -136,22 +179,30 @@ export default (token: string, baseURL: string): API => {
 			return subscriptions;
 		},
 
-		listSubscriptionsDeploys: async (): Promise<SubscriptionDeploy[]> =>
+		listSubscriptionsDeploys: (): Promise<SubscriptionDeploy[]> =>
 			axios
 				.get<SubscriptionDeploy[]>(
-					baseURL + '/api/billing/list-subscriptions-deploys',
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getURL('/api/billing/list-subscriptions-deploys'),
+					getConfig()
 				)
 				.then(res => res.data),
 
-		inspect: async (): Promise<Deployment[]> =>
+		inspect: (): Promise<Deployment[]> =>
 			axios
-				.get<Deployment[]>(baseURL + '/api/inspect', {
-					headers: { Authorization: 'jwt ' + token }
-				})
+				.get<Deployment[]>(getURL('/api/inspect'), getConfig())
 				.then(res => res.data),
+
+		inspectByName: async (suffix: string): Promise<Deployment> => {
+			const deployments = await api.inspect();
+
+			const deploy = deployments.find(deploy => deploy.suffix == suffix);
+
+			if (!deploy) {
+				throw new Error(`Deployment with suffix '${suffix}' not found`);
+			}
+
+			return deploy;
+		},
 
 		upload: async (
 			name: string,
@@ -169,14 +220,9 @@ export default (token: string, baseURL: string): API => {
 				contentType: 'application/x-zip-compressed'
 			});
 			const res = await axios.post<string>(
-				baseURL + '/api/package/create',
+				getURL('/api/package/create'),
 				fd,
-				{
-					headers: {
-						Authorization: 'jwt ' + token,
-						...(fd.getHeaders?.() ?? {}) // operator chaining to make it compatible with frontend
-					}
-				}
+				getConfig(fd.getHeaders?.() ?? {}) // Operator chaining to make it compatible with frontend
 			);
 			return res.data;
 		},
@@ -186,30 +232,26 @@ export default (token: string, baseURL: string): API => {
 			jsons: MetaCallJSON[] = []
 		): Promise<AddResponse> =>
 			axios
-				.post<string>(
-					baseURL + '/api/repository/add',
+				.post<AddResponse>(
+					getURL('/api/repository/add'),
 					{
 						url,
 						branch,
 						jsons
 					},
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getConfig()
 				)
-				.then((res: AxiosResponse) => res.data as AddResponse),
+				.then(res => res.data),
 		branchList: (url: string): Promise<Branches> =>
 			axios
-				.post<string>(
-					baseURL + '/api/repository/branchlist',
+				.post<Branches>(
+					getURL('/api/repository/branchlist'),
 					{
 						url
 					},
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getConfig()
 				)
-				.then((res: AxiosResponse) => res.data as Branches),
+				.then(res => res.data),
 
 		deploy: (
 			name: string,
@@ -221,7 +263,7 @@ export default (token: string, baseURL: string): API => {
 		): Promise<Create> =>
 			axios
 				.post<Create>(
-					baseURL + '/api/deploy/create',
+					getURL('/api/deploy/create'),
 					{
 						resourceType,
 						suffix: name,
@@ -230,9 +272,7 @@ export default (token: string, baseURL: string): API => {
 						plan,
 						version
 					},
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getConfig()
 				)
 				.then(res => res.data),
 
@@ -243,15 +283,13 @@ export default (token: string, baseURL: string): API => {
 		): Promise<string> =>
 			axios
 				.post<string>(
-					baseURL + '/api/deploy/delete',
+					getURL('/api/deploy/delete'),
 					{
 						prefix,
 						suffix,
 						version
 					},
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getConfig()
 				)
 				.then(res => res.data),
 
@@ -264,7 +302,7 @@ export default (token: string, baseURL: string): API => {
 		): Promise<string> =>
 			axios
 				.post<string>(
-					baseURL + '/api/deploy/logs',
+					getURL('/api/deploy/logs'),
 					{
 						container,
 						type,
@@ -272,25 +310,60 @@ export default (token: string, baseURL: string): API => {
 						prefix,
 						version
 					},
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getConfig()
 				)
 				.then(res => res.data),
 
 		fileList: (url: string, branch: string): Promise<string[]> =>
 			axios
 				.post<{ [k: string]: string[] }>(
-					baseURL + '/api/repository/filelist',
+					getURL('/api/repository/filelist'),
 					{
 						url,
 						branch
 					},
-					{
-						headers: { Authorization: 'jwt ' + token }
-					}
+					getConfig()
 				)
-				.then(res => res.data['files'])
+				.then(res => res.data['files']),
+
+		invoke: <Result, Args = unknown>(
+			type: InvokeType,
+			prefix: string,
+			suffix: string,
+			version = 'v1',
+			name: string,
+			args?: Args
+		): Promise<Result> => {
+			const url = getURL(
+				`/${prefix}/${suffix}/${version}/${type}/${name}`
+			);
+			const config = getConfig();
+
+			const req =
+				args === undefined
+					? axios.get<Result>(url, config)
+					: axios.post<Result>(url, args, config);
+
+			return req.then(res => res.data);
+		},
+
+		call: <Result, Args = unknown>(
+			prefix: string,
+			suffix: string,
+			version = 'v1',
+			name: string,
+			args?: Args
+		): Promise<Result> =>
+			api.invoke(InvokeType.Call, prefix, suffix, version, name, args),
+
+		await: <Result, Args = unknown>(
+			prefix: string,
+			suffix: string,
+			version = 'v1',
+			name: string,
+			args?: Args
+		): Promise<Result> =>
+			api.invoke(InvokeType.Await, prefix, suffix, version, name, args)
 	};
 
 	return api;
