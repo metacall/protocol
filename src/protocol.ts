@@ -23,7 +23,13 @@ import FormData from 'form-data';
 import { URL } from 'url';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 import { Plans } from './plan';
+import { ProtocolError } from './protocol';
 
+/**
+ * Type guard for protocol-specific errors (Axios errors in this case).
+ * @param err - The unknown error to check.
+ * @returns True if the error is an ProtocolError, false otherwise.
+ */
 export const isProtocolError = (err: unknown): boolean =>
 	axios.isAxiosError(err);
 
@@ -50,9 +56,6 @@ export interface AddResponse {
 export interface Branches {
 	branches: [string];
 }
-
-export const MaxRetries = 30;
-export const MaxRetryInterval = 2000;
 
 export enum InvokeType {
 	Call = 'call',
@@ -367,4 +370,74 @@ export default (token: string, baseURL: string): API => {
 	};
 
 	return api;
+};
+
+export const MaxRetries = 30;
+export const MaxRetryInterval = 2000;
+
+/**
+ * Executes an asynchronous function with automatic retry logic.
+ *
+ * The function will be retried up to `maxRetries` times, waiting `interval`
+ * milliseconds between each attempt. If all retries fail, the last error is
+ * wrapped in a new `Error` with a descriptive message, including:
+ * - Function name (or truncated string representation if anonymous)
+ * - Number of retries attempted
+ * - Original error message
+ *
+ * Error handling is fully type-safe:
+ * - If the error is an ProtocolError (checked via `isProtocolError`), its
+ *   message is used.
+ * - If the error is a standard `Error`, its `message` is used.
+ * - Otherwise, the error is converted to a string.
+ *
+ * @typeParam T - The return type of the function being retried.
+ * @param fn - A lambda or bound function returning a `Promise<T>`. The
+ *             function should contain the logic you want to retry.
+ * @param maxRetries - Maximum number of retry attempts. Default: `MaxRetries`.
+ * @param interval - Delay between retries in milliseconds. Default: `MaxRetryInterval`.
+ * @returns A `Promise` resolving to the return value of `fn` if successful.
+ * @throws Error If all retry attempts fail, throws a new Error containing
+ *                 information about the function and the last error.
+ *
+ * @example
+ * ```ts
+ * const deployment = await waitFor(() => api.inspectByName('my-suffix'));
+ * ```
+ *
+ * @example
+ * ```ts
+ * const result = await waitFor(
+ *   () => api.deploy(name, env, plan, resourceType)
+ * );
+ * ```
+ */
+export const waitFor = async <T>(
+	fn: () => Promise<T>,
+	maxRetries: number = MaxRetries,
+	interval: number = MaxRetryInterval
+): Promise<T> => {
+	let retry = 0;
+
+	for (;;) {
+		try {
+			return await fn();
+		} catch (error) {
+			retry++;
+			if (retry >= maxRetries) {
+				const func = fn.name || fn.toString();
+				const message = isProtocolError(error)
+					? (error as ProtocolError).message
+					: error instanceof Error
+					? error.message
+					: String(error);
+
+				throw new Error(
+					`Failed to execute '${func}' after ${maxRetries} retries: ${message}`
+				);
+			}
+
+			await new Promise(r => setTimeout(r, interval));
+		}
+	}
 };
