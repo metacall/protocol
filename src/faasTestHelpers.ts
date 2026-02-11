@@ -1,8 +1,9 @@
 /**
- * FaaS test helpers: readiness, inspect (fetch-based), get deployment by suffix, call function.
- * Uses fetch (no axios). For use in integration tests and tooling.
+ * FaaS test helpers: readiness, inspect, get deployment by suffix, call function.
+ * Uses axios to match existing protocol code. For use in integration tests and tooling.
  */
 
+import axios from 'axios';
 import type { Deployment } from './deployment';
 
 const defaultMaxRetries = 30;
@@ -22,13 +23,15 @@ export async function waitForReadiness(
 	const url = `${baseUrl.replace(/\/$/, '')}/readiness`;
 	for (let i = 0; i < maxRetries; i++) {
 		try {
-			const res = await fetch(url);
+			const res = await axios.get(url);
 			if (res.status === 200) return;
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
 			if (
 				i === 0 &&
-				(msg.includes('fetch failed') || msg.includes('ECONNREFUSED'))
+				(msg.includes('ECONNREFUSED') ||
+					msg.includes('Network Error') ||
+					(err as { code?: string }).code === 'ECONNREFUSED')
 			) {
 				throw new Error(
 					`Cannot reach FaaS at ${url}. Start it first (e.g. "npm start" in another terminal), then run the integration tests.`
@@ -42,14 +45,21 @@ export async function waitForReadiness(
 }
 
 /**
- * GET /api/inspect and return deployments (fetch, no token).
+ * GET /api/inspect and return deployments (no token).
  */
 export async function getDeployments(baseUrl: string): Promise<Deployment[]> {
 	const url = `${baseUrl.replace(/\/$/, '')}/api/inspect`;
-	const res = await fetch(url);
-	if (!res.ok)
-		throw new Error(`Inspect failed: ${res.status} ${res.statusText}`);
-	return (await res.json()) as Deployment[];
+	try {
+		const res = await axios.get<Deployment[]>(url);
+		return res.data;
+	} catch (err) {
+		if (axios.isAxiosError(err) && err.response) {
+			throw new Error(
+				`Inspect failed: ${err.response.status} ${err.response.statusText}`
+			);
+		}
+		throw err;
+	}
 }
 
 /**
@@ -90,21 +100,21 @@ export async function callFunction(
 		/\/$/,
 		''
 	)}/${prefix}/${suffix}/${version}/call/${funcName}`;
-	const contentType = 'Content-Type';
-	const res = await fetch(url, {
-		method: 'POST',
-		headers: { [contentType]: 'application/json' },
-		body: JSON.stringify(args)
-	});
-	if (!res.ok) {
-		const text = await res.text();
-		throw new Error(`Call ${funcName} failed: ${res.status} ${text}`);
-	}
-	const text = await res.text();
-	if (!text) return undefined;
 	try {
-		return JSON.parse(text) as unknown;
-	} catch {
-		return text;
+		const res = await axios.post<unknown>(url, args, {
+			headers: { 'Content-Type': 'application/json' }
+		});
+		return res.data;
+	} catch (err) {
+		if (axios.isAxiosError(err) && err.response) {
+			const text =
+				typeof err.response.data === 'string'
+					? err.response.data
+					: JSON.stringify(err.response.data);
+			throw new Error(
+				`Call ${funcName} failed: ${err.response.status} ${text}`
+			);
+		}
+		throw err;
 	}
 }
