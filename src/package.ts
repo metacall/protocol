@@ -15,7 +15,7 @@
 import walk from 'ignore-walk';
 import { basename, extname } from 'path';
 import { LanguageId, MetaCallJSON } from './deployment';
-import { Languages } from './language';
+import { detectRunnersFromFiles, Languages, Runner } from './language';
 
 export const findFilesPath = async (
 	path: string = process.cwd(),
@@ -36,23 +36,14 @@ export const pathIsMetaCallJson = (path: string): boolean =>
 export const findMetaCallJsons = (files: string[]): string[] =>
 	files.filter(pathIsMetaCallJson);
 
-export const findRunners = (files: string[]): Set<string> => {
-	const runners: Set<string> = new Set<string>();
+export const findRunners = (files: string[]): Set<Runner> =>
+	new Set<Runner>(detectRunnersFromFiles(files));
 
-	for (const file of files) {
-		const fileName = basename(file);
-		for (const langId of Object.keys(Languages)) {
-			const lang = Languages[langId as LanguageId];
-			for (const re of lang.runnerFilesRegexes) {
-				if (re.exec(fileName) && lang.runnerName) {
-					runners.add(lang.runnerName);
-				}
-			}
-		}
-	}
-
-	return runners;
-};
+export const detectRunners = async (
+	path: string = process.cwd(),
+	ignoreFiles: string[] = ['.gitignore']
+): Promise<Runner[]> =>
+	detectRunnersFromFiles(await findFilesPath(path, ignoreFiles));
 
 export enum PackageError {
 	Empty = 'No files found in the current folder',
@@ -64,7 +55,7 @@ interface PackageDescriptor {
 	error: PackageError;
 	files: string[];
 	jsons: string[];
-	runners: string[];
+	runners: Runner[];
 }
 
 const NullPackage: PackageDescriptor = {

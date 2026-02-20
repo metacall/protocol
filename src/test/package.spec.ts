@@ -1,6 +1,7 @@
 import { deepStrictEqual } from 'assert';
 import { join } from 'path';
 import { MetaCallJSON } from '../deployment';
+import { detectRunnersFromFiles, Runners } from '../language';
 import {
 	findFilesPath,
 	findMetaCallJsons,
@@ -125,6 +126,28 @@ describe('Unit Package', function () {
 		const expectedRunners: string[] = ['ruby'];
 		const files = await findFilesPath(runnersPath);
 		deepStrictEqual(Array.from(findRunners(files)), expectedRunners);
+	});
+
+	it('detectRunnersFromFiles all', async () => {
+		const runnersPath = join(basePath, 'runners');
+		const expectedRunners: string[] = [
+			'csharp',
+			'ruby',
+			'nodejs',
+			'python'
+		];
+		const files = await findFilesPath(runnersPath);
+		deepStrictEqual(detectRunnersFromFiles(files), expectedRunners);
+	});
+
+	it('runners include install commands', () => {
+		deepStrictEqual(Runners.nodejs.installCommand, 'npm install');
+		deepStrictEqual(
+			Runners.python.installCommand,
+			'pip install -r requirements.txt'
+		);
+		deepStrictEqual(Runners.ruby.installCommand, 'bundle install');
+		deepStrictEqual(Runners.csharp.installCommand, 'dotnet restore');
 	});
 
 	it('generateJsonsFromFiles', async () => {
