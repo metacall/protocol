@@ -62,6 +62,36 @@ export enum InvokeType {
 	Await = 'await'
 }
 
+export interface DeployCreateRequest {
+	suffix: string;
+	resourceType: ResourceType;
+	release: string;
+	env: { name: string; value: string }[];
+	plan: Plans;
+	version: string;
+}
+
+export interface DeployDeleteRequest {
+	prefix: string;
+	suffix: string;
+	version: string;
+}
+
+export interface RepositoryAddRequest {
+	url: string;
+	branch: string;
+	jsons: MetaCallJSON[];
+}
+
+export interface RepositoryBranchListRequest {
+	url: string;
+}
+
+export interface RepositoryFileListRequest {
+	url: string;
+	branch: string;
+}
+
 export interface API {
 	refresh(): Promise<string>;
 	ready(): Promise<boolean>;
@@ -419,7 +449,7 @@ export const waitFor = async <T>(
 ): Promise<T> => {
 	let retry = 0;
 
-	for (;;) {
+	for (; ;) {
 		try {
 			return await fn();
 		} catch (error) {
@@ -429,8 +459,8 @@ export const waitFor = async <T>(
 				const message = isProtocolError(error)
 					? (error as ProtocolError).message
 					: error instanceof Error
-					? error.message
-					: String(error);
+						? error.message
+						: String(error);
 
 				throw new Error(
 					`Failed to execute '${func}' after ${maxRetries} retries: ${message}`
