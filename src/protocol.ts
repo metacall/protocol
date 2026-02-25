@@ -404,6 +404,7 @@ export default (token: string, baseURL: string): API => {
 
 export const MaxRetries = 30;
 export const MaxRetryInterval = 2000;
+export const MaxFuncLength = 64;
 
 /**
  * Executes an asynchronous function with automatic retry logic.
@@ -411,7 +412,7 @@ export const MaxRetryInterval = 2000;
  * The function will be retried up to `maxRetries` times, waiting `interval`
  * milliseconds between each attempt. If all retries fail, the last error is
  * wrapped in a new `Error` with a descriptive message, including:
- * - Function name (or truncated string representation if anonymous)
+ * - Function name (or string representation truncated to `MaxFuncLength` chars if anonymous)
  * - Number of retries attempted
  * - Original error message
  *
@@ -455,7 +456,12 @@ export const waitFor = async <T>(
 		} catch (error) {
 			retry++;
 			if (retry >= maxRetries) {
-				const func = fn.name || fn.toString();
+				const fnStr = fn.toString();
+				const func =
+					fn.name ||
+					(fnStr.length > MaxFuncLength
+						? fnStr.slice(0, MaxFuncLength) + '...'
+						: fnStr);
 				const message = isProtocolError(error)
 					? (error as ProtocolError).message
 					: error instanceof Error
