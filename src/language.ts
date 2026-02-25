@@ -5,14 +5,56 @@
 
 */
 
+import { basename } from 'path';
 import { LanguageId } from './deployment';
+
+export type Runner = 'nodejs' | 'python' | 'ruby' | 'csharp';
+
+export interface RunnerInfo {
+	id: Runner;
+	languageId: LanguageId;
+	filePatterns: RegExp[];
+	installCommand: string;
+	displayName: string;
+}
+
+export const Runners: Record<Runner, RunnerInfo> = {
+	nodejs: {
+		id: 'nodejs',
+		languageId: 'node',
+		filePatterns: [/^package\.json$/],
+		installCommand: 'npm install',
+		displayName: 'NPM'
+	},
+	python: {
+		id: 'python',
+		languageId: 'py',
+		filePatterns: [/^requirements\.txt$/],
+		installCommand: 'pip install -r requirements.txt',
+		displayName: 'Pip'
+	},
+	ruby: {
+		id: 'ruby',
+		languageId: 'rb',
+		filePatterns: [/^Gemfile$/],
+		installCommand: 'bundle install',
+		displayName: 'Gem'
+	},
+	csharp: {
+		id: 'csharp',
+		languageId: 'cs',
+		filePatterns: [/^project\.json$/, /\.csproj$/],
+		installCommand: 'dotnet restore',
+		displayName: 'NuGet'
+	}
+};
 
 interface Language {
 	tag: string; // Tag which corresponds to language_id in metacall.json
 	displayName: string; // Name for displaying the language
 	hexColor: string; // Color for displaying the language related things
 	fileExtRegex: RegExp; // Regex for selecting the metacall.json scripts field
-	runnerName?: string; // Id of the runner
+	runnerName?: Runner; // Id of the runner
 	runnerFilesRegexes: RegExp[]; // Regex for generating the runners list
 }
 
@@ -23,7 +65,7 @@ export const Languages: Record<LanguageId, Language> = {
 		hexColor: '#953dac',
 		fileExtRegex: /^cs$/,
 		runnerName: 'csharp',
-		runnerFilesRegexes: [/^project\.json$/, /\.csproj$/]
+		runnerFilesRegexes: Runners.csharp.filePatterns
 	},
 	py: {
 		tag: 'py',
@@ -31,7 +73,7 @@ export const Languages: Record<LanguageId, Language> = {
 		hexColor: '#ffd43b',
 		fileExtRegex: /^py$/,
 		runnerName: 'python',
-		runnerFilesRegexes: [/^requirements\.txt$/]
+		runnerFilesRegexes: Runners.python.filePatterns
 	},
 	rb: {
 		tag: 'rb',
@@ -39,7 +81,7 @@ export const Languages: Record<LanguageId, Language> = {
 		hexColor: '#e53935',
 		fileExtRegex: /^rb$/,
 		runnerName: 'ruby',
-		runnerFilesRegexes: [/^Gemfile$/]
+		runnerFilesRegexes: Runners.ruby.filePatterns
 	},
 	node: {
 		tag: 'node',
@@ -47,7 +89,7 @@ export const Languages: Record<LanguageId, Language> = {
 		hexColor: '#3c873a',
 		fileExtRegex: /^js$/,
 		runnerName: 'nodejs',
-		runnerFilesRegexes: [/^package\.json$/]
+		runnerFilesRegexes: Runners.nodejs.filePatterns
 	},
 	ts: {
 		tag: 'ts',
@@ -55,7 +97,7 @@ export const Languages: Record<LanguageId, Language> = {
 		hexColor: '#007acc',
 		fileExtRegex: /^(ts|tsx)$/,
 		runnerName: 'nodejs',
-		runnerFilesRegexes: [/^package\.json$/] // TODO: Use tsconfig instead?
+		runnerFilesRegexes: Runners.nodejs.filePatterns
 	},
 	file: {
 		tag: 'file',
@@ -94,12 +136,26 @@ export const DisplayNameToLanguageId: Record<string, LanguageId> = Object.keys(
 );
 
 export const RunnerToDisplayName = (runner: string): string => {
-	const displayNameMap: Record<string, string> = {
-		nodejs: 'NPM',
-		python: 'Pip',
-		ruby: 'Gem',
-		csharp: 'NuGet'
-	};
+	const match = Runners[runner as Runner];
 
-	return displayNameMap[runner] || 'Build';
+	return match ? match.displayName : 'Build';
+};
+
+export const detectRunnersFromFiles = (files: string[]): Runner[] => {
+	const runners = new Set<Runner>();
+
+	for (const file of files) {
+		const fileName = basename(file);
+
+		for (const runner of Object.values(Runners)) {
+			for (const pattern of runner.filePatterns) {
+				if (pattern.exec(fileName)) {
+					runners.add(runner.id);
+					break;
+				}
+			}
+		}
+	}
+
+	return Array.from(runners);
 };
