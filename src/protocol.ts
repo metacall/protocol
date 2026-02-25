@@ -449,7 +449,7 @@ export const waitFor = async <T>(
 ): Promise<T> => {
 	let retry = 0;
 
-	for (; ;) {
+	for (;;) {
 		try {
 			return await fn();
 		} catch (error) {
@@ -459,8 +459,8 @@ export const waitFor = async <T>(
 				const message = isProtocolError(error)
 					? (error as ProtocolError).message
 					: error instanceof Error
-						? error.message
-						: String(error);
+					? error.message
+					: String(error);
 
 				throw new Error(
 					`Failed to execute '${func}' after ${maxRetries} retries: ${message}`
