@@ -6,4 +6,5 @@ export * from './plan';
 export * from './token';
 import metacallAPI from './protocol';
 export * from './protocol';
+export * from './signup';
 export default metacallAPI;
