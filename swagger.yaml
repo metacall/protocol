@@ -111,24 +111,7 @@ paths:
       tags:
         - Packages
         
-  /api/deploy/add:
-    post:
-      summary: Retrieve information about this service
-      description: >-
-        deploys the previously uploaded zip into the faas
-      operationId: AddRepo
-      requestBody:
-        $ref: '#/components/requestBodies/AddRepo'
-      security:
-        - JwtAuth: []
-      responses:
-        '200':
-          $ref: '#/components/responses/200ServiceInfo'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-      tags:
-        - Deployments
-        
+
 
   /api/deploy/create:
     post:
@@ -166,8 +149,224 @@ paths:
       tags:
         - Deployments
         
-        
-  
+
+  /api/readiness:
+    get:
+      summary: Check service readiness
+      description: >-
+        Health check endpoint — returns 200 when the FaaS is ready to accept requests.
+      operationId: GetReadiness
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - System
+
+  /api/billing/list-subscriptions-deploys:
+    get:
+      summary: List subscriptions associated with deployments
+      description: >-
+        Returns a list of subscriptions associated with active deployments.
+      operationId: GetSubscriptionsDeploysList
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          description: List of subscription deploys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    plan:
+                      type: string
+                    date:
+                      type: number
+                    deploy:
+                      type: string
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Billing
+
+  /api/repository/add:
+    post:
+      summary: Add a repository for deployment
+      description: >-
+        Clones and adds a repository for deployment.
+      operationId: AddRepository
+      requestBody:
+        $ref: '#/components/requestBodies/AddRepo'
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          description: Repository added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Repositories
+
+  /api/repository/branchlist:
+    post:
+      summary: List branches of a repository
+      description: >-
+        Returns the list of branches for a given repository URL.
+      operationId: GetBranchList
+      requestBody:
+        $ref: '#/components/requestBodies/RepositoryUrl'
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          description: List of branches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  branches:
+                    type: array
+                    items:
+                      type: string
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Repositories
+
+  /api/repository/filelist:
+    post:
+      summary: List files of a repository
+      description: >-
+        Returns the list of files for a given repository and branch.
+      operationId: GetFileList
+      requestBody:
+        $ref: '#/components/requestBodies/RepositoryFiles'
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      type: string
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Repositories
+
+  /api/deploy/logs:
+    post:
+      summary: Retrieve deployment logs
+      description: >-
+        Retrieves logs for a specific deployment, filtered by suffix and container.
+      operationId: GetDeployLogs
+      requestBody:
+        $ref: '#/components/requestBodies/DeployLogs'
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          description: Log output as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Deployments
+
+  /{prefix}/{suffix}/{version}/call/{func}:
+    parameters:
+      - name: prefix
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 'Owner of the deployment (username or org)'
+      - name: suffix
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 'Name of the deployment'
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+          default: 'v1'
+        description: 'Deployment version'
+      - name: func
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 'Name of the function to invoke'
+    get:
+      summary: Invoke a deployed function (no arguments)
+      description: >-
+        Calls a deployed function by name without arguments.
+      operationId: CallFunctionGet
+      security:
+        - JwtAuth: []
+      responses:
+        '200':
+          description: Function return value
+          content:
+            application/json:
+              schema: {}
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Functions
+    post:
+      summary: Invoke a deployed function (with arguments)
+      description: >-
+        Calls a deployed function by name with the provided arguments.
+      operationId: CallFunctionPost
+      security:
+        - JwtAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              description: 'Arguments to pass to the function'
+      responses:
+        '200':
+          description: Function return value
+          content:
+            application/json:
+              schema: {}
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      tags:
+        - Functions
 
 components:
   securitySchemes:
@@ -548,6 +747,21 @@ components:
             A list of strings that can be used to find other metadata about this
             `DrsObject` from external metadata sources. These aliases can be
             used to represent secondary accession numbers or external GUIDs.
+    MetaCallJSON:
+      type: object
+      properties:
+        language_id:
+          type: string
+          enum: ['node','ts','rb','py','cs','cob','file','rpc']
+          description: 'Language identifier'
+        path:
+          type: string
+          description: 'Path to the scripts'
+        scripts:
+          type: array
+          items:
+            type: string
+          description: 'List of script files'
   responses:
     200ServiceInfo:
       description: Retrieve info about the DRS service
@@ -721,10 +935,72 @@ components:
               jsons:
                 type: array
                 items:
-                  $ref: '#/definitions/MetaCallJSON' 
+                  $ref: '#/components/schemas/MetaCallJSON'
             required:
             - url
             - branch
+
+    RepositoryUrl:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                description: 'URL of the repository'
+            required:
+              - url
+
+    RepositoryFiles:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                description: 'URL of the repository'
+              branch:
+                type: string
+                description: 'Name of the branch'
+            required:
+              - url
+              - branch
+
+    DeployLogs:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              suffix:
+                type: string
+                description: 'Name of the deployment'
+              prefix:
+                type: string
+                description: 'Owner of the deployment'
+              container:
+                type: string
+                description: 'Runtime container (e.g. node, py)'
+              type:
+                type: string
+                enum:
+                  - job
+                  - deploy
+                description: 'Type of logs to retrieve'
+              version:
+                type: string
+                default: 'v1'
+                description: 'Deployment version'
+            required:
+              - container
+              - type
+              - suffix
+              - prefix
 
     CreateDeployment:
       required: true
@@ -802,18 +1078,4 @@ components:
                   The overall JWT is signed as are the individual Passport
                   Visas.
 
-definitions:
-  MetaCallJSON:
-    properties:
-      language_id:
-        type: string
-        enum: ['node','ts','rb','py','cs','cob''file','rpc']
-        description: "Language id"
-      path:
-        type: string
-      script:
-        schema:
-            type: array
-            items:
-              type: string
-              
+
