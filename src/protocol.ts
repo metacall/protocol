@@ -62,6 +62,36 @@ export enum InvokeType {
 	Await = 'await'
 }
 
+export interface DeployCreateRequest {
+	suffix: string;
+	resourceType: ResourceType;
+	release: string;
+	env: { name: string; value: string }[];
+	plan: Plans;
+	version: string;
+}
+
+export interface DeployDeleteRequest {
+	prefix: string;
+	suffix: string;
+	version: string;
+}
+
+export interface RepositoryAddRequest {
+	url: string;
+	branch: string;
+	jsons: MetaCallJSON[];
+}
+
+export interface RepositoryBranchListRequest {
+	url: string;
+}
+
+export interface RepositoryFileListRequest {
+	url: string;
+	branch: string;
+}
+
 export interface API {
 	refresh(): Promise<string>;
 	ready(): Promise<boolean>;
