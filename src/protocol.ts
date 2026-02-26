@@ -252,7 +252,7 @@ export default (token: string, baseURL: string): API => {
 				filename: 'blob',
 				contentType: 'application/x-zip-compressed'
 			});
-		    const res = await axios.post<string>(
+			const res = await axios.post<string>(
 				getURL('/api/package/create'),
 				fd,
 				getConfig()
