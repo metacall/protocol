@@ -54,7 +54,7 @@ export interface AddResponse {
 }
 
 export interface Branches {
-	branches: [string];
+	branches: string[];
 }
 
 export enum InvokeType {
@@ -178,7 +178,7 @@ export default (token: string, baseURL: string): API => {
 		ready: (): Promise<boolean> =>
 			axios
 				.get<boolean>(getURL('/api/readiness'), getConfig())
-				.then(res => res.status == 200),
+				.then(res => res.data),
 
 		validate: (): Promise<boolean> =>
 			axios
@@ -228,7 +228,7 @@ export default (token: string, baseURL: string): API => {
 		inspectByName: async (suffix: string): Promise<Deployment> => {
 			const deployments = await api.inspect();
 
-			const deploy = deployments.find(deploy => deploy.suffix == suffix);
+			const deploy = deployments.find(deploy => deploy.suffix === suffix);
 
 			if (!deploy) {
 				throw new Error(`Deployment with suffix '${suffix}' not found`);
@@ -450,7 +450,7 @@ export const waitFor = async <T>(
 ): Promise<T> => {
 	let retry = 0;
 
-	for (;;) {
+	while (retry < maxRetries) {
 		try {
 			return await fn();
 		} catch (error) {
@@ -476,4 +476,6 @@ export const waitFor = async <T>(
 			await new Promise(r => setTimeout(r, interval));
 		}
 	}
+
+	throw new Error('Unexpected: waitFor exited without returning');
 };
