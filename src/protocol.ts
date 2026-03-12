@@ -57,6 +57,25 @@ export interface Branches {
 	branches: string[];
 }
 
+export interface ServiceInfo {
+	id: string;
+	name: string;
+	description?: string;
+	organization: {
+		name: string;
+		url: string;
+	};
+	contactUrl?: string;
+	documentationUrl?: string;
+	createdAt?: string;
+	updatedAt?: string;
+	environment?: string;
+	version: string;
+	type: {
+		artifact: string;
+	};
+}
+
 export enum InvokeType {
 	Call = 'call',
 	Await = 'await'
@@ -95,8 +114,8 @@ export interface RepositoryFileListRequest {
 export interface API {
 	refresh(): Promise<string>;
 	ready(): Promise<boolean>;
-	validate(): Promise<boolean>;
-	deployEnabled(): Promise<boolean>;
+	validate(): Promise<ServiceInfo>;
+	deployEnabled(): Promise<ServiceInfo>;
 	listSubscriptions(): Promise<SubscriptionMap>;
 	listSubscriptionsDeploys(): Promise<SubscriptionDeploy[]>;
 	inspect(): Promise<Deployment[]>;
@@ -180,14 +199,14 @@ export default (token: string, baseURL: string): API => {
 				.get<boolean>(getURL('/api/readiness'), getConfig())
 				.then(res => res.data),
 
-		validate: (): Promise<boolean> =>
+		validate: (): Promise<ServiceInfo> =>
 			axios
-				.get<boolean>(getURL('/validate'), getConfig())
+				.get<ServiceInfo>(getURL('/validate'), getConfig())
 				.then(res => res.data),
 
-		deployEnabled: (): Promise<boolean> =>
+		deployEnabled: (): Promise<ServiceInfo> =>
 			axios
-				.get<boolean>(
+				.get<ServiceInfo>(
 					getURL('/api/account/deploy-enabled'),
 					getConfig()
 				)
