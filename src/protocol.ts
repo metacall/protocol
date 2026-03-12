@@ -274,7 +274,7 @@ export default (token: string, baseURL: string): API => {
 			const res = await axios.post<string>(
 				getURL('/api/package/create'),
 				fd,
-				getConfig() // Axios automatically sets multipart headers
+				getConfig(fd.getHeaders())
 			);
 			return res.data;
 		},
@@ -386,8 +386,12 @@ export default (token: string, baseURL: string): API => {
 			name: string,
 			args?: Args
 		): Promise<Result> => {
+			const encodedPrefix = encodeURIComponent(prefix);
+			const encodedSuffix = encodeURIComponent(suffix);
+			const encodedVersion = encodeURIComponent(version);
+			const encodedName = encodeURIComponent(name);
 			const url = getURL(
-				`/${prefix}/${suffix}/${version}/${type}/${name}`
+				`/${encodedPrefix}/${encodedSuffix}/${encodedVersion}/${type}/${encodedName}`
 			);
 			const config = getConfig();
 
