@@ -1,0 +1,66 @@
+name: Downstream Tests
+on:
+    pull_request:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    downstream:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout protocol
+              uses: actions/checkout@v4
+
+            - name: Setup NodeJS
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - name: Install protocol dependencies
+              run: npm ci
+
+            - name: Build protocol
+              run: npm run build
+
+            - name: Pack protocol
+              run: |
+                  PROTO_TGZ=$(npm pack --silent)
+                  echo "PROTO_TGZ=$PROTO_TGZ" >> $GITHUB_ENV
+
+            - name: Checkout deploy
+              uses: actions/checkout@v4
+              with:
+                  repository: metacall/deploy
+                  path: deploy
+
+            - name: Install deploy dependencies
+              working-directory: deploy
+              run: npm ci
+
+            - name: Install protocol into deploy
+              working-directory: deploy
+              run: npm install ../${{ env.PROTO_TGZ }} --no-save
+
+            - name: Run deploy unit tests
+              working-directory: deploy
+              run: npm run unit -- --reporter dot
+
+            - name: Checkout faas
+              uses: actions/checkout@v4
+              with:
+                  repository: metacall/faas
+                  path: faas
+
+            - name: Install faas dependencies
+              working-directory: faas
+              run: npm ci
+
+            - name: Install protocol into faas
+              working-directory: faas
+              run: npm install ../${{ env.PROTO_TGZ }} --no-save
+
+            - name: Run faas tests
+              working-directory: faas
+              run: npm test -- --reporter dot
