@@ -1,2 +1,5 @@
 src/test/resources/**
 githooks/**
+vitest.config.js
+tsconfig.vitest.json
+test/**

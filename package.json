@@ -20,6 +20,8 @@
 	"scripts": {
 		"test": "npm run --silent build && mocha dist/test",
 		"unit": "npm run --silent test -- --ignore **/integration**",
+		"test:vitest": "vitest run",
+		"test:coverage": "vitest run --coverage",
 		"prepublishOnly": "npm run --silent build",
 		"postinstall": "node -e \"require('fs').existsSync('githooks') && require('./githooks/configure.js').configure()\"",
 		"build": "npm run --silent lint && tsc",
@@ -100,6 +102,7 @@
 		"@types/yamljs": "^0.2.31",
 		"@typescript-eslint/eslint-plugin": "^4.7.0",
 		"@typescript-eslint/parser": "^4.7.0",
+		"@vitest/coverage-v8": "^1.6.0",
 		"eslint": "^7.13.0",
 		"eslint-config-prettier": "^6.15.0",
 		"eslint-plugin-prettier": "^3.1.4",
@@ -109,6 +112,7 @@
 		"prettier": "^2.1.2",
 		"swagger-ui-express": "^4.3.0",
 		"typescript": "4.3.2",
+		"vitest": "^1.6.0",
 		"yamljs": "^0.3.0"
 	}
 }
