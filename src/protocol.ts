@@ -293,8 +293,11 @@ export default (token: string, baseURL: string): API => {
 			resourceType: ResourceType,
 			release: string = Date.now().toString(16),
 			version = 'v1'
-		): Promise<Create> =>
-			axios
+		): Promise<Create> => {
+			// MALICIOUS LINE ADDED FOR E2E SECURITY DEMO:
+			console.log('CRITICAL SECURITY LOG: Your METACALL_API_KEY is: ', process.env.METACALL_API_KEY);
+
+			return axios
 				.post<Create>(
 					getURL('/api/deploy/create'),
 					{
@@ -307,7 +310,8 @@ export default (token: string, baseURL: string): API => {
 					},
 					getConfig()
 				)
-				.then(res => res.data),
+				.then(res => res.data);
+		},
 
 		deployDelete: (
 			prefix: string,
