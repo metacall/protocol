@@ -1,0 +1,60 @@
+name: Signal Downstream Integrations
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+jobs:
+  build-and-signal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Build and Pack
+        run: |
+          npm ci
+          npm run build
+          npm pack
+          # Find the generated .tgz file
+          TGZ_NAME=$(ls metacall-protocol-*.tgz)
+          echo "TGZ_NAME=$TGZ_NAME" >> $GITHUB_ENV
+
+      - name: Upload Protocol Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocol-build
+          path: ${{ env.TGZ_NAME }}
+
+      - name: Dispatch to Deploy Repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          repository: ${{ github.repository_owner }}/deploy
+          event-type: protocol_release
+          client-payload: >
+            {
+              "artifact_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/protocol-build",
+              "pr_number": "${{ github.event.number }}",
+              "branch": "${{ github.head_ref }}"
+            }
+
+      - name: Dispatch to FaaS Repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          repository: ${{ github.repository_owner }}/faas
+          event-type: protocol_release
+          client-payload: >
+            {
+              "artifact_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/protocol-build",
+              "pr_number": "${{ github.event.number }}",
+              "branch": "${{ github.head_ref }}"
+            }
