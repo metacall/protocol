@@ -67,6 +67,7 @@ jobs:
               working-directory: faas
               run: |
                   npm i
+                  npm uninstall @metacall/protocol
                   npm i ./metacall-protocol-*.tgz
 
             - name: Build FaaS
@@ -106,6 +107,7 @@ jobs:
               working-directory: deploy
               run: |
                   npm i
+                  npm uninstall @metacall/protocol
                   npm i ./metacall-protocol-*.tgz
 
             - name: Build Deploy
