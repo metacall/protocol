@@ -74,6 +74,10 @@ jobs:
               working-directory: faas
               run: npm run build
 
+            - name: Allow tgz in Docker build
+              working-directory: faas
+              run: echo '!*.tgz' >> .dockerignore
+
             - name: Run Integration tests
               working-directory: faas
               run: npm run integration
