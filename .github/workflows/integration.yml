@@ -4,6 +4,7 @@ on:
     pull_request:
     push:
         branches: [master]
+    workflow_dispatch:
 
 concurrency:
     group: protocol-integration-${{ github.event.pull_request.number || github.ref }}
