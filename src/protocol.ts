@@ -255,7 +255,7 @@ export default (token: string, baseURL: string): API => {
 			const res = await axios.post<string>(
 				getURL('/api/package/create'),
 				fd,
-				getConfig(fd.getHeaders?.() ?? {}) // Operator chaining to make it compatible with frontend
+				getConfig() // Axios automatically sets multipart headers
 			);
 			return res.data;
 		},
