@@ -6,7 +6,7 @@ on:
             - master
         tags:
             - 'v*.*.*'
-    workflow_trigger:
+    workflow_dispatch:
 
 permissions:
     contents: read
