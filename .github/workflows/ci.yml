@@ -6,6 +6,7 @@ on:
             - master
         tags:
             - 'v*.*.*'
+    worflow_trigger:
 
 permissions:
     contents: read
