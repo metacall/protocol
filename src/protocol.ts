@@ -1,8 +1,6 @@
 /*
-
-* About File:
-
-	this is just a client that implements all the rest API from the FaaS, so each function it contains is an endpoint in the FaaS for deploying and similar
+	This is just a client that implements all the rest API from the FaaS,
+	so each function it contains is an endpoint in the FaaS for deploying:
 
 	refresh: updates the auth token
 	validate: validates the auth token
@@ -18,22 +16,29 @@
 	fileList: get files of a repository by branch
 */
 
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import FormData from 'form-data';
 import { URL } from 'url';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 import { Plans } from './plan';
-import { ProtocolError } from './protocol';
+
+export class ProtocolError extends Error {
+	status?: number;
+	data?: unknown;
+
+	constructor(message: string, status?: number, data?: unknown) {
+		super(message);
+		this.name = 'ProtocolError';
+		this.status = status;
+		this.data = data;
+	}
+}
 
 /**
- * Type guard for protocol-specific errors (Axios errors in this case).
+ * Type guard for protocol-specific errors.
  * @param err - The unknown error to check.
  * @returns True if the error is an ProtocolError, false otherwise.
  */
-export const isProtocolError = (err: unknown): boolean =>
-	axios.isAxiosError(err);
-
-export { AxiosError as ProtocolError };
+export const isProtocolError = (err: unknown): err is ProtocolError =>
+	err instanceof ProtocolError;
 
 type SubscriptionMap = Record<string, number>;
 
@@ -158,50 +163,131 @@ export interface API {
 	): Promise<Result>;
 }
 
-export default (token: string, baseURL: string): API => {
-	const getURL = (path: string): string => new URL(path, baseURL).toString();
-	const getConfig = (headers = {}): AxiosRequestConfig => {
-		return {
-			headers: {
-				Authorization: 'jwt ' + token,
-				...headers
-			}
+interface RequestImpl {
+	url: string;
+	headers: Headers;
+	method: string;
+	body?: BodyInit;
+}
+
+class Request {
+	private token: string;
+	private baseURL: string;
+	private impl: RequestImpl;
+
+	constructor(token: string, baseURL: string) {
+		this.token = token;
+		this.baseURL = baseURL;
+		this.impl = {
+			url: '',
+			headers: new Headers({
+				Authorization: 'jwt ' + this.token
+			}),
+			method: 'GET',
+			body: undefined
 		};
-	};
+	}
+
+	url(path: string): Request {
+		this.impl.url = new URL(path, this.baseURL).toString();
+		return this;
+	}
+
+	headers(headers = {}): Request {
+		this.impl.headers = new Headers({
+			Authorization: 'jwt ' + this.token,
+			...headers
+		});
+		return this;
+	}
+
+	method(method: string): Request {
+		this.impl.method = method;
+		return this;
+	}
+
+	blob(body: BodyInit): Request {
+		this.impl.body = body;
+		return this;
+	}
+
+	body(body: unknown): Request {
+		this.impl.body = JSON.stringify(body);
+		this.impl.headers.set('Content-Type', 'application/json');
+		return this;
+	}
+
+	private async execute(): Promise<Response> {
+		const config: RequestInit = {
+			method: this.impl.method,
+			headers: this.impl.headers
+		};
+
+		if (this.impl.body !== undefined) {
+			config.body = this.impl.body;
+		}
+
+		const res = await fetch(this.impl.url, config);
+
+		if (!res.ok) {
+			const data = await res.text().catch(() => null);
+			throw new Error(
+				`HTTP ${res.status}: ${res.statusText}${
+					data ? ` - ${data}` : ''
+				}`
+			);
+		}
+
+		return res;
+	}
+
+	async asJson<T>(): Promise<T> {
+		const res = await this.execute();
+		return res.json() as Promise<T>;
+	}
+
+	async asText(): Promise<string> {
+		const res = await this.execute();
+		return res.text();
+	}
+
+	async asStatus(): Promise<number> {
+		const res = await this.execute();
+		return res.status;
+	}
+
+	async asResponse(): Promise<Response> {
+		return await this.execute();
+	}
+}
+
+export default (token: string, baseURL: string): API => {
+	const request = () => new Request(token, baseURL);
 
 	const api: API = {
 		refresh: (): Promise<string> =>
-			axios
-				.get<string>(getURL('/api/account/refresh-token'), getConfig())
-				.then(res => res.data),
+			request().url('/api/account/refresh-token').asText(),
 
 		ready: (): Promise<boolean> =>
-			axios
-				.get<boolean>(getURL('/api/readiness'), getConfig())
-				.then(res => res.status == 200),
+			request()
+				.url('/api/readiness')
+				.asStatus()
+				.then(status => status === 200),
 
 		validate: (): Promise<boolean> =>
-			axios
-				.get<boolean>(getURL('/validate'), getConfig())
-				.then(res => res.data),
+			request().url('/validate').asJson<boolean>(),
 
 		deployEnabled: (): Promise<boolean> =>
-			axios
-				.get<boolean>(
-					getURL('/api/account/deploy-enabled'),
-					getConfig()
-				)
-				.then(res => res.data),
+			request().url('/api/account/deploy-enabled').asJson<boolean>(),
 
 		listSubscriptions: async (): Promise<SubscriptionMap> => {
-			const res = await axios.get<string[]>(
-				getURL('/api/billing/list-subscriptions'),
-				getConfig()
-			);
+			const subscriptionsList = await request()
+				.url('/api/billing/list-subscriptions')
+				.asJson<string[]>();
 
 			const subscriptions: SubscriptionMap = {};
 
-			for (const id of res.data) {
+			for (const id of subscriptionsList) {
 				if (subscriptions[id] === undefined) {
 					subscriptions[id] = 1;
 				} else {
@@ -213,17 +299,12 @@ export default (token: string, baseURL: string): API => {
 		},
 
 		listSubscriptionsDeploys: (): Promise<SubscriptionDeploy[]> =>
-			axios
-				.get<SubscriptionDeploy[]>(
-					getURL('/api/billing/list-subscriptions-deploys'),
-					getConfig()
-				)
-				.then(res => res.data),
+			request()
+				.url('/api/billing/list-subscriptions')
+				.asJson<SubscriptionDeploy[]>(),
 
 		inspect: (): Promise<Deployment[]> =>
-			axios
-				.get<Deployment[]>(getURL('/api/inspect'), getConfig())
-				.then(res => res.data),
+			request().url('/api/inspect').asJson<Deployment[]>(),
 
 		inspectByName: async (suffix: string): Promise<Deployment> => {
 			const deployments = await api.inspect();
@@ -239,52 +320,48 @@ export default (token: string, baseURL: string): API => {
 
 		upload: async (
 			name: string,
-			blob: unknown,
+			blob: Blob,
 			jsons: MetaCallJSON[] = [],
 			runners: string[] = []
 		): Promise<string> => {
 			const fd = new FormData();
+
 			fd.append('id', name);
 			fd.append('type', 'application/x-zip-compressed');
 			fd.append('jsons', JSON.stringify(jsons));
 			fd.append('runners', JSON.stringify(runners));
-			fd.append('raw', blob, {
-				filename: 'blob',
-				contentType: 'application/x-zip-compressed'
-			});
-			const res = await axios.post<string>(
-				getURL('/api/package/create'),
-				fd,
-				getConfig() // Axios automatically sets multipart headers
-			);
-			return res.data;
+			fd.append('raw', blob, 'blob');
+
+			return await request()
+				.url('/api/package/create')
+				.method('POST')
+				.blob(fd)
+				.asJson<string>();
 		},
+
 		add: (
 			url: string,
 			branch: string,
 			jsons: MetaCallJSON[] = []
 		): Promise<AddResponse> =>
-			axios
-				.post<AddResponse>(
-					getURL('/api/repository/add'),
-					{
-						url,
-						branch,
-						jsons
-					},
-					getConfig()
-				)
-				.then(res => res.data),
+			request()
+				.url('/api/repository/add')
+				.method('POST')
+				.body({
+					url,
+					branch,
+					jsons
+				})
+				.asJson<AddResponse>(),
+
 		branchList: (url: string): Promise<Branches> =>
-			axios
-				.post<Branches>(
-					getURL('/api/repository/branchlist'),
-					{
-						url
-					},
-					getConfig()
-				)
-				.then(res => res.data),
+			request()
+				.url('/api/repository/branchlist')
+				.method('POST')
+				.body({
+					url
+				})
+				.asJson<Branches>(),
 
 		deploy: (
 			name: string,
@@ -294,37 +371,33 @@ export default (token: string, baseURL: string): API => {
 			release: string = Date.now().toString(16),
 			version = 'v1'
 		): Promise<Create> =>
-			axios
-				.post<Create>(
-					getURL('/api/deploy/create'),
-					{
-						resourceType,
-						suffix: name,
-						release,
-						env,
-						plan,
-						version
-					},
-					getConfig()
-				)
-				.then(res => res.data),
+			request()
+				.url('/api/deploy/create')
+				.method('POST')
+				.body({
+					resourceType,
+					suffix: name,
+					release,
+					env,
+					plan,
+					version
+				})
+				.asJson<Create>(),
 
 		deployDelete: (
 			prefix: string,
 			suffix: string,
 			version = 'v1'
 		): Promise<string> =>
-			axios
-				.post<string>(
-					getURL('/api/deploy/delete'),
-					{
-						prefix,
-						suffix,
-						version
-					},
-					getConfig()
-				)
-				.then(res => res.data),
+			request()
+				.url('/api/deploy/delete')
+				.method('POST')
+				.body({
+					prefix,
+					suffix,
+					version
+				})
+				.asJson<string>(),
 
 		logs: (
 			container: string,
@@ -333,33 +406,30 @@ export default (token: string, baseURL: string): API => {
 			prefix: string,
 			version = 'v1'
 		): Promise<string> =>
-			axios
-				.post<string>(
-					getURL('/api/deploy/logs'),
-					{
-						container,
-						type,
-						suffix,
-						prefix,
-						version
-					},
-					getConfig()
-				)
-				.then(res => res.data),
+			request()
+				.url('/api/deploy/logs')
+				.method('POST')
+				.body({
+					container,
+					type,
+					suffix,
+					prefix,
+					version
+				})
+				.asJson<string>(),
 
 		fileList: (url: string, branch: string): Promise<string[]> =>
-			axios
-				.post<{ [k: string]: string[] }>(
-					getURL('/api/repository/filelist'),
-					{
-						url,
-						branch
-					},
-					getConfig()
-				)
-				.then(res => res.data['files']),
+			request()
+				.url('/api/repository/filelist')
+				.method('POST')
+				.body({
+					url,
+					branch
+				})
+				.asJson<{ [k: string]: string[] }>()
+				.then(res => res['files']),
 
-		invoke: <Result, Args = unknown>(
+		invoke: async <Result, Args = unknown>(
 			type: InvokeType,
 			prefix: string,
 			suffix: string,
@@ -367,17 +437,17 @@ export default (token: string, baseURL: string): API => {
 			name: string,
 			args?: Args
 		): Promise<Result> => {
-			const url = getURL(
+			const req = request().url(
 				`/${prefix}/${suffix}/${version}/${type}/${name}`
 			);
-			const config = getConfig();
 
-			const req =
-				args === undefined
-					? axios.get<Result>(url, config)
-					: axios.post<Result>(url, args, config);
+			if (args === undefined) {
+				req.method('GET');
+			} else {
+				req.method('POST').body(args);
+			}
 
-			return req.then(res => res.data);
+			return await req.asJson<Result>();
 		},
 
 		call: <Result, Args = unknown>(
@@ -402,8 +472,8 @@ export default (token: string, baseURL: string): API => {
 	return api;
 };
 
-export const MaxRetries = 30;
-export const MaxRetryInterval = 2000;
+export const MaxRetries = 100;
+export const MaxRetryInterval = 5000;
 export const MaxFuncLength = 64;
 
 /**
@@ -444,15 +514,21 @@ export const MaxFuncLength = 64;
  * ```
  */
 export const waitFor = async <T>(
-	fn: () => Promise<T>,
+	fn: (cancel: (message: string) => void) => Promise<T>,
 	maxRetries: number = MaxRetries,
 	interval: number = MaxRetryInterval
 ): Promise<T> => {
 	let retry = 0;
+	let cancellation = undefined;
+
+	const cancel = (message: string) => {
+		retry = MaxRetries;
+		cancellation = `Operation cancelled with message: ${message}`;
+	};
 
 	for (;;) {
 		try {
-			return await fn();
+			return await fn(cancel);
 		} catch (error) {
 			retry++;
 			if (retry >= maxRetries) {
@@ -462,11 +538,14 @@ export const waitFor = async <T>(
 					(fnStr.length > MaxFuncLength
 						? fnStr.slice(0, MaxFuncLength) + '...'
 						: fnStr);
-				const message = isProtocolError(error)
-					? (error as ProtocolError).message
-					: error instanceof Error
-					? error.message
-					: String(error);
+				const message =
+					cancellation !== undefined
+						? cancellation
+						: isProtocolError(error)
+						? error.message
+						: error instanceof Error
+						? error.message
+						: String(error);
 
 				throw new Error(
 					`Failed to execute '${func}' after ${maxRetries} retries: ${message}`

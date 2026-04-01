@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { URL } from 'url';
 
 interface Request {
@@ -7,7 +6,7 @@ interface Request {
 	'g-recaptcha-response'?: string;
 }
 
-export default (
+export default async (
 	email: string,
 	password: string,
 	baseURL: string
@@ -17,16 +16,24 @@ export default (
 		password
 	};
 
-	if (!baseURL.includes('localhost'))
-		request['g-recaptcha-response'] = 'empty'; //TODO: Review the captcha
+	if (!baseURL.includes('localhost')) {
+		request['g-recaptcha-response'] = 'empty'; // TODO: Review the captcha
+	}
 
-	return axios
-		.post<string>(baseURL + '/login', request, {
-			headers: {
-				Accept: 'application/json, text/plain, */*',
-				Host: new URL(baseURL).host,
-				Origin: baseURL
-			}
-		})
-		.then(res => res.data);
+	const res = await fetch(baseURL + '/login', {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json, text/plain, */*',
+			Host: new URL(baseURL).host,
+			Origin: baseURL,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(request)
+	});
+
+	if (!res.ok) {
+		throw new Error(res.statusText);
+	}
+
+	return res.text();
 };

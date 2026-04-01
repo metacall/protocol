@@ -7,5 +7,5 @@ export * from './protocol';
 export * from './signup';
 export * from './token';
 
-import metacallAPI from './protocol';
-export default metacallAPI;
+import Protocol from './protocol';
+export default Protocol;
