@@ -1,5 +1,6 @@
 .github
 .vscode
+.env
 package-lock.json
 src/test
 src/doc

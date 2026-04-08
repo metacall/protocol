@@ -20,7 +20,7 @@ describe('Integration API', function () {
 
 	const API = Protocol(token, baseURL);
 
-	it.skip('Should deploy a repository', async function () {
+	it('Should deploy a repository', async function () {
 		const { id } = await API.add(
 			'https://github.com/metacall/examples.git',
 			'master',
@@ -60,7 +60,7 @@ describe('Integration API', function () {
 		strictEqual(result, 'Deploy Delete Succeed');
 	});
 
-	it.skip('Should deploy a package', async function () {
+	it('Should deploy a package', async function () {
 		const basePath = join(
 			process.cwd(),
 			'src',
