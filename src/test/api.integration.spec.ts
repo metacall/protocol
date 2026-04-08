@@ -30,11 +30,15 @@ describe('Integration API', function () {
 	this.timeout(2000000);
 
 	if (MaybeAPI === undefined) {
-		// Skip test
-		console.warn(
-			'⚠️ Warning: Integration API Test being skipped due API not defined'
-		);
-		return;
+		if (user === undefined || password === undefined) {
+			// Skip test
+			console.warn(
+				'⚠️ Warning: Login API Test being skipped due to API_USER or API_PASSWORD not defined'
+			);
+			return;
+		} else {
+			throw Error('Login failed');
+		}
 	}
 
 	const API: API = MaybeAPI;
