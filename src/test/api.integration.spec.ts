@@ -1,26 +1,49 @@
 import { strictEqual } from 'assert';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import login from '../login';
 import { Plans } from '../plan';
-import Protocol, { ResourceType, waitFor } from '../protocol';
+import Protocol, { API, ResourceType, waitFor } from '../protocol';
 
-describe('Integration API', function () {
-	this.timeout(2000000);
+const user = process.env.API_USER;
+const password = process.env.API_PASSWORD;
+const baseURL = process.env.API_BASE_URL || 'https://dashboard.metacall.io';
 
-	const token = process.env.API_TOKEN;
-	const baseURL = process.env.API_BASE_URL || 'https://dashboard.metacall.io';
+let MaybeAPI: API | undefined = undefined;
 
-	if (token === undefined) {
+describe('Login API', function () {
+	if (user === undefined || password === undefined) {
 		// Skip test
 		console.warn(
-			'⚠️ Warning: Integration API Test being skipped due to API_TOKEN not defined'
+			'⚠️ Warning: Login API Test being skipped due to API_USER or API_PASSWORD not defined'
 		);
 		return;
 	}
 
-	const API = Protocol(token, baseURL);
+	it('Should login', async function () {
+		const token = await login(user, password, baseURL);
+		MaybeAPI = Protocol(token, baseURL);
+	});
+});
+
+describe('Integration API', function () {
+	this.timeout(2000000);
+
+	if (MaybeAPI === undefined) {
+		// Skip test
+		console.warn(
+			'⚠️ Warning: Integration API Test being skipped due API not defined'
+		);
+		return;
+	}
+
+	const API: API = MaybeAPI;
 
 	it('Should deploy a repository', async function () {
+		if (API === undefined) {
+			throw Error('Invalid login');
+		}
+
 		const { id } = await API.add(
 			'https://github.com/metacall/examples.git',
 			'master',
