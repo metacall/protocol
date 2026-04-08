@@ -36,6 +36,9 @@ jobs:
               run: npm run build
 
             - name: Run Tests
+              env:
+                  API_USER: ${{ secrets.METACALL_API_USER }}
+                  API_PASSWORD: ${{ secrets.METACALL_API_PASSWORD }}
               run: npm run test
 
     faas:
