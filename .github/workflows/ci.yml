@@ -38,37 +38,37 @@ jobs:
             - name: Run Tests
               run: npm run test
 
-    # faas:
-    #     name: MetaCall FaaS Dispatch
-    #     needs: test
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #         - name: MetaCall FaaS Workflow Dispatch
-    #           uses: convictional/trigger-workflow-and-wait@v1.6.1
-    #           with:
-    #               owner: metacall
-    #               repo: faas
-    #               github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
-    #               workflow_file_name: ci.yml
-    #               wait_workflow: true
-    #               client_payload: '{"ref": "${{ github.event.pull_request.head.sha || github.sha }}", "repo": "${{ github.event.pull_request.head.repo.full_name || github.repository }}"}'
-    #               ref: master
+    faas:
+        name: MetaCall FaaS Dispatch
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - name: MetaCall FaaS Workflow Dispatch
+              uses: convictional/trigger-workflow-and-wait@v1.6.1
+              with:
+                  owner: metacall
+                  repo: faas
+                  github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
+                  workflow_file_name: ci.yml
+                  wait_workflow: true
+                  client_payload: '{"ref": "${{ github.event.pull_request.head.sha || github.sha }}", "repo": "${{ github.event.pull_request.head.repo.full_name || github.repository }}"}'
+                  ref: master
 
-    # deploy:
-    #     name: MetaCall Deploy Dispatch
-    #     needs: test
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #         - name: MetaCall Deploy Workflow Dispatch
-    #           uses: convictional/trigger-workflow-and-wait@v1.6.1
-    #           with:
-    #               owner: metacall
-    #               repo: deploy
-    #               github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
-    #               workflow_file_name: ci.yml
-    #               wait_workflow: true
-    #               client_payload: '{"ref": "${{ github.event.pull_request.head.sha || github.sha }}", "repo": "${{ github.event.pull_request.head.repo.full_name || github.repository }}"}'
-    #               ref: master
+    deploy:
+        name: MetaCall Deploy Dispatch
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - name: MetaCall Deploy Workflow Dispatch
+              uses: convictional/trigger-workflow-and-wait@v1.6.1
+              with:
+                  owner: metacall
+                  repo: deploy
+                  github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
+                  workflow_file_name: ci.yml
+                  wait_workflow: true
+                  client_payload: '{"ref": "${{ github.event.pull_request.head.sha || github.sha }}", "repo": "${{ github.event.pull_request.head.repo.full_name || github.repository }}"}'
+                  ref: master
 
     publish:
         name: Publish
