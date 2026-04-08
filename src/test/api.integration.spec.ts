@@ -9,45 +9,24 @@ const user = process.env.API_USER;
 const password = process.env.API_PASSWORD;
 const baseURL = process.env.API_BASE_URL || 'https://dashboard.metacall.io';
 
-let MaybeAPI: API | undefined = undefined;
-
-describe('Login API', function () {
-	if (user === undefined || password === undefined) {
-		// Skip test
-		console.warn(
-			'⚠️ Warning: Login API Test being skipped due to API_USER or API_PASSWORD not defined'
-		);
-		return;
-	}
-
-	it('Should login', async function () {
-		const token = await login(user, password, baseURL);
-		MaybeAPI = Protocol(token, baseURL);
-	});
-});
-
 describe('Integration API', function () {
 	this.timeout(2000000);
 
-	if (MaybeAPI === undefined) {
-		if (user === undefined || password === undefined) {
-			// Skip test
+	let API: API;
+
+	before(async function () {
+		if (!user || !password) {
+			// Skip all tests
 			console.warn(
 				'⚠️ Warning: Login API Test being skipped due to API_USER or API_PASSWORD not defined'
 			);
-			return;
-		} else {
-			throw Error('Login failed');
+			this.skip();
 		}
-	}
-
-	const API: API = MaybeAPI;
+		const token = await login(user, password, baseURL);
+		API = Protocol(token, baseURL);
+	});
 
 	it('Should deploy a repository', async function () {
-		if (API === undefined) {
-			throw Error('Invalid login');
-		}
-
 		const { id } = await API.add(
 			'https://github.com/metacall/examples.git',
 			'master',
