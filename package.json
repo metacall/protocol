@@ -18,6 +18,7 @@
 		}
 	},
 	"scripts": {
+		"pretest": "npm --prefix ./src/test/resources/integration/api install",
 		"test": "npm run --silent build && mocha dist/test",
 		"unit": "npm run --silent test -- --ignore **/**.integration.**",
 		"prepublishOnly": "npm run --silent build",
