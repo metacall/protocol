@@ -54,7 +54,7 @@ export enum ResourceType {
 	Repository = 'Repository'
 }
 
-export interface AddResponse {
+export interface Resource {
 	id: string;
 }
 
@@ -111,12 +111,8 @@ export interface API {
 		blob: unknown,
 		jsons?: MetaCallJSON[],
 		runners?: string[]
-	): Promise<string>;
-	add(
-		url: string,
-		branch: string,
-		jsons: MetaCallJSON[]
-	): Promise<AddResponse>;
+	): Promise<Resource>;
+	add(url: string, branch: string, jsons: MetaCallJSON[]): Promise<Resource>;
 	deploy(
 		name: string,
 		env: { name: string; value: string }[],
@@ -262,7 +258,7 @@ class Request {
 }
 
 export default (token: string, baseURL: string): API => {
-	const request = () => new Request(token, baseURL);
+	const request = (url = baseURL) => new Request(token, url);
 
 	const api: API = {
 		refresh: (): Promise<string> =>
@@ -323,7 +319,7 @@ export default (token: string, baseURL: string): API => {
 			blob: Blob,
 			jsons: MetaCallJSON[] = [],
 			runners: string[] = []
-		): Promise<string> => {
+		): Promise<Resource> => {
 			const fd = new FormData();
 
 			fd.append('id', name);
@@ -336,14 +332,14 @@ export default (token: string, baseURL: string): API => {
 				.url('/api/package/create')
 				.method('POST')
 				.blob(fd)
-				.asJson<string>();
+				.asJson<Resource>();
 		},
 
 		add: (
 			url: string,
 			branch: string,
 			jsons: MetaCallJSON[] = []
-		): Promise<AddResponse> =>
+		): Promise<Resource> =>
 			request()
 				.url('/api/repository/add')
 				.method('POST')
@@ -352,7 +348,7 @@ export default (token: string, baseURL: string): API => {
 					branch,
 					jsons
 				})
-				.asJson<AddResponse>(),
+				.asJson<Resource>(),
 
 		branchList: (url: string): Promise<Branches> =>
 			request()
@@ -437,9 +433,15 @@ export default (token: string, baseURL: string): API => {
 			name: string,
 			args?: Args
 		): Promise<Result> => {
-			const req = request().url(
-				`/${prefix}/${suffix}/${version}/${type}/${name}`
-			);
+			// Old API
+			// const req = request('https://api.metacall.io').url(
+			// 	`/${prefix}/${suffix}/${version}/${type}/${name}`
+			// );
+
+			// New API
+			const req = request(
+				`https://${version}-${suffix}-${prefix}.api.metacall.io`
+			).url(`/${type}/${name}`);
 
 			if (args === undefined) {
 				req.method('GET');
