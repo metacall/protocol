@@ -16,6 +16,7 @@
 	fileList: get files of a repository by branch
 */
 
+import { Readable } from 'stream';
 import { URL } from 'url';
 import { Create, Deployment, LogType, MetaCallJSON } from './deployment';
 import { Plans } from './plan';
@@ -202,7 +203,7 @@ class Request {
 		return this;
 	}
 
-	blob(body: BodyInit): Request {
+	bodyRaw(body: BodyInit): Request {
 		this.impl.body = body;
 		return this;
 	}
@@ -259,6 +260,7 @@ class Request {
 
 export default (token: string, baseURL: string): API => {
 	const request = (url = baseURL) => new Request(token, url);
+	const hostname = new URL(baseURL).hostname;
 
 	const api: API = {
 		refresh: (): Promise<string> =>
@@ -316,7 +318,7 @@ export default (token: string, baseURL: string): API => {
 
 		upload: async (
 			name: string,
-			blob: Blob,
+			data: Blob | Readable,
 			jsons: MetaCallJSON[] = [],
 			runners: string[] = []
 		): Promise<Resource> => {
@@ -326,12 +328,31 @@ export default (token: string, baseURL: string): API => {
 			fd.append('type', 'application/x-zip-compressed');
 			fd.append('jsons', JSON.stringify(jsons));
 			fd.append('runners', JSON.stringify(runners));
-			fd.append('raw', blob, 'blob');
+
+			if (data instanceof Blob) {
+				fd.append('raw', data, `${name}.zip`);
+			} else if (data instanceof Readable) {
+				// This is terrible but NodeJS does not ensure that streaming and zero
+				// copy will be performed anyway, as the sizes are not really big (150mb is the limit)
+				// we can do this nasty intermediate buffer creation and forget about it
+				const chunks: Uint8Array[] = [];
+				for await (const chunk of data) {
+					chunks.push(
+						typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+					);
+				}
+				const buffer = Buffer.concat(chunks);
+				fd.append('raw', new Blob([buffer]), `${name}.zip`);
+			} else {
+				throw Error(
+					`Type ${typeof data} not supported, use Blob or Readable`
+				);
+			}
 
 			return await request()
 				.url('/api/package/create')
 				.method('POST')
-				.blob(fd)
+				.bodyRaw(fd)
 				.asJson<Resource>();
 		},
 
@@ -433,15 +454,19 @@ export default (token: string, baseURL: string): API => {
 			name: string,
 			args?: Args
 		): Promise<Result> => {
-			// Old API
-			// const req = request('https://api.metacall.io').url(
-			// 	`/${prefix}/${suffix}/${version}/${type}/${name}`
-			// );
-
-			// New API
-			const req = request(
-				`https://${version}-${suffix}-${prefix}.api.metacall.io`
-			).url(`/${type}/${name}`);
+			const req = (() => {
+				if (hostname === 'localhost') {
+					// Old API in commercial FaaS and current API of FaaS reimplementation
+					return request().url(
+						`/${prefix}/${suffix}/${version}/${type}/${name}`
+					);
+				} else {
+					// New API used by commercial FaaS
+					return request(
+						`https://${version}-${suffix}-${prefix}.api.metacall.io`
+					).url(`/${type}/${name}`);
+				}
+			})();
 
 			if (args === undefined) {
 				req.method('GET');
