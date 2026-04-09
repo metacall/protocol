@@ -109,7 +109,7 @@ export interface API {
 	inspectByName(suffix: string): Promise<Deployment>;
 	upload(
 		name: string,
-		blob: unknown,
+		blob: Blob | Readable,
 		jsons?: MetaCallJSON[],
 		runners?: string[]
 	): Promise<Resource>;
