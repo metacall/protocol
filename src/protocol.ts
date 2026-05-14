@@ -127,6 +127,7 @@ export interface API {
 		suffix: string,
 		version: string
 	): Promise<string>;
+	availableJobLogs(suffix: string): Promise<string[]>;
 	logs(
 		container: string,
 		type: LogType,
@@ -418,6 +419,15 @@ export default (token: string, baseURL: string): API => {
 				})
 				.asJson<string>(),
 
+		availableJobLogs: (suffix: string): Promise<string[]> =>
+			request()
+				.url('/api/deploy/availablejoblogs')
+				.method('POST')
+				.body({
+					suffix
+				})
+				.asJson<string[]>(),
+
 		logs: (
 			container: string,
 			type: LogType = LogType.Deploy,
@@ -435,7 +445,7 @@ export default (token: string, baseURL: string): API => {
 					suffix,
 					version
 				})
-				.asJson<string>(),
+				.asText(),
 
 		fileList: (url: string, branch: string): Promise<string[]> =>
 			request()

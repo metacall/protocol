@@ -2,6 +2,7 @@ import { strictEqual } from 'assert';
 import { createReadStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { LogType } from '../deployment';
 import login from '../login';
 import { Plans } from '../plan';
 import Protocol, { API, ResourceType, waitFor } from '../protocol';
@@ -57,6 +58,19 @@ describe('Integration API', function () {
 
 		strictEqual(deploy.suffix, 'metacall-examples');
 		strictEqual(deploy.status, 'ready');
+
+		const jobLogs = await API.availableJobLogs(deploy.suffix);
+
+		strictEqual(jobLogs, ['source', 'nodejs']);
+
+		const logs = await API.logs(
+			'nodejs',
+			LogType.Job,
+			deploy.prefix,
+			deploy.suffix
+		);
+
+		console.log(logs);
 
 		const result = await API.deployDelete(
 			deploy.prefix,
