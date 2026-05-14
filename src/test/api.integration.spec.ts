@@ -1,4 +1,4 @@
-import { strictEqual } from 'assert';
+import { deepStrictEqual, strictEqual } from 'assert';
 import { createReadStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -61,7 +61,7 @@ describe('Integration API', function () {
 
 		const jobLogs = await API.availableJobLogs(deploy.suffix);
 
-		strictEqual(jobLogs, ['source', 'nodejs']);
+		deepStrictEqual(jobLogs, ['source', 'nodejs']);
 
 		const logs = await API.logs(
 			'nodejs',
