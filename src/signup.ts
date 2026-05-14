@@ -1,4 +1,5 @@
 import { URL } from 'url';
+import { ProtocolError } from './protocol';
 interface Request {
 	email: string;
 	password: string;
@@ -34,7 +35,7 @@ export default async (
 	});
 
 	if (!res.ok) {
-		throw new Error(res.statusText);
+		throw new ProtocolError('Signup failed', res.status, res.statusText);
 	}
 
 	return res.text();

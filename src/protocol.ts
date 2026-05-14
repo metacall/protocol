@@ -344,8 +344,10 @@ export default (token: string, baseURL: string): API => {
 				const buffer = Buffer.concat(chunks);
 				fd.append('raw', new Blob([buffer]), `${name}.zip`);
 			} else {
-				throw Error(
-					`Type ${typeof data} not supported, use Blob or Readable`
+				throw new ProtocolError(
+					`Type ${typeof data} not supported, use Blob or Readable`,
+					undefined,
+					data
 				);
 			}
 
