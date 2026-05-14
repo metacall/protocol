@@ -1,4 +1,4 @@
-import { deepStrictEqual, strictEqual } from 'assert';
+import assert, { deepStrictEqual, strictEqual } from 'assert';
 import { createReadStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -70,7 +70,7 @@ describe('Integration API', function () {
 			deploy.suffix
 		);
 
-		console.log(logs);
+		assert(logs.length !== 0, 'Logs must not be empty');
 
 		const result = await API.deployDelete(
 			deploy.prefix,
