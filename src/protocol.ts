@@ -130,8 +130,8 @@ export interface API {
 	logs(
 		container: string,
 		type: LogType,
-		suffix: string,
 		prefix: string,
+		suffix: string,
 		version?: string
 	): Promise<string>;
 	branchList(url: string): Promise<Branches>;
@@ -421,8 +421,8 @@ export default (token: string, baseURL: string): API => {
 		logs: (
 			container: string,
 			type: LogType = LogType.Deploy,
-			suffix: string,
 			prefix: string,
+			suffix: string,
 			version = 'v1'
 		): Promise<string> =>
 			request()
@@ -431,8 +431,8 @@ export default (token: string, baseURL: string): API => {
 				.body({
 					container,
 					type,
-					suffix,
 					prefix,
+					suffix,
 					version
 				})
 				.asJson<string>(),
