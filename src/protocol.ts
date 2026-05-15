@@ -347,7 +347,7 @@ export default (token: string, baseURL: string): API => {
 			} else {
 				throw new ProtocolError(
 					`Type ${typeof data} not supported, use Blob or Readable`,
-					undefined,
+					422,
 					data
 				);
 			}

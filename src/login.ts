@@ -33,8 +33,8 @@ export default async (
 	});
 
 	if (!res.ok) {
-		throw new ProtocolError('Login failed', res.status, res.statusText);
+		throw new ProtocolError('Login failed', res.status, await res.text());
 	}
 
-	return res.text();
+	return await res.text();
 };
