@@ -228,11 +228,11 @@ class Request {
 		const res = await fetch(this.impl.url, config);
 
 		if (!res.ok) {
-			const data = await res.text().catch(() => null);
-			throw new Error(
-				`HTTP ${res.status}: ${res.statusText}${
-					data ? ` - ${data}` : ''
-				}`
+			const data = await res.text().catch(() => undefined);
+			throw new ProtocolError(
+				`Request to ${this.impl.url} failed: ${res.statusText}.`,
+				res.status,
+				data
 			);
 		}
 

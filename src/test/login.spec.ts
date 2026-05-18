@@ -1,6 +1,6 @@
 import { fail, ok, strictEqual } from 'assert';
 import login from '../login';
-import { ProtocolError } from '../protocol';
+import API, { ProtocolError } from '../protocol';
 
 const user = process.env.API_USER || '';
 const password = process.env.API_PASSWORD || '';
@@ -26,6 +26,18 @@ describe('Unit Login', function () {
 			fail('This should not be reached');
 		} catch (error) {
 			strictEqual((error as ProtocolError).data, 'Invalid email.');
+		}
+	});
+
+	it('login bad token', async () => {
+		try {
+			const api = API('yeet', baseURL);
+
+			await api.validate();
+
+			fail('This should not be reached');
+		} catch (error) {
+			strictEqual((error as ProtocolError).data, 'jwt malformed');
 		}
 	});
 
