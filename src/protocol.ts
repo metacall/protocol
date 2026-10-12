@@ -299,7 +299,7 @@ export default (token: string, baseURL: string): API => {
 
 		listSubscriptionsDeploys: (): Promise<SubscriptionDeploy[]> =>
 			request()
-				.url('/api/billing/list-subscriptions')
+				.url('/api/billing/list-subscriptions-deploys')
 				.asJson<SubscriptionDeploy[]>(),
 
 		inspect: (): Promise<Deployment[]> =>
