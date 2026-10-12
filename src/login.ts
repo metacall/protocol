@@ -20,8 +20,6 @@ export default async (
 		request['g-recaptcha-response'] = 'empty'; // TODO: Review the captcha
 	}
 
-	// Use built-in URL class (available in both browsers and Node.js 10+)
-	// No need to import from 'url' module which is Node.js-specific
 	const url = new URL(baseURL);
 
 	const res = await fetch(baseURL + '/login', {
